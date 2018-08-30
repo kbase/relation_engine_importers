@@ -34,7 +34,7 @@ You should be able to access `localhost:8529` in your browser and sign on with `
 First, convert the genbank file into a set of CSV data files:
 
 ```sh
-# python import-genbank.py <path-to-genbank-file> <path-to-output-directory>
+# python import_genbank.py <path-to-genbank-file> <path-to-output-directory>
 $ python genbank-to-csv.py ncbi-data/my-genome.gb
 ```
 
