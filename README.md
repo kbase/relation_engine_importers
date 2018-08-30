@@ -1,6 +1,6 @@
-# Bio + arangodb
+# Genbank to ArangoDB
 
-This is an experimental set of modules that take genbank files and import them into an ArangoDB graph.
+This is an experimental utility that takes Genbank files and imports them into an ArangoDB graph.
 
 ## Usage
 
@@ -33,7 +33,7 @@ You should be able to access `localhost:8529` in your browser and sign on with `
 
 First, convert the genbank file into a set of CSV data files:
 
-```py
+```sh
 # python import-genbank.py <path-to-genbank-file> <path-to-output-directory>
 $ python genbank-to-csv.py ncbi-data/my-genome.gb
 ```

@@ -121,9 +121,10 @@ def import_annotation_feature(genbank, created_docs, db):
             continue
         doc = {
             'location_start': feature.location.start,
-            'location_end': feature.location.end,
-            'type': feature.type
+            'location_end': feature.location.end
         }
+        if feature.type != 'gene':
+            doc['type'] = feature.type
         for (name, val) in feature.qualifiers.items():
             doc[name] = val[0]
         locus_tag = feature.qualifiers['locus_tag'][0]
