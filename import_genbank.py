@@ -83,7 +83,7 @@ def import_taxonomy(genbank, created_docs, db):
     doc = {'_from': created_docs['organism'], '_to': organism_taxon_id}
     query = 'UPSERT @doc INSERT @doc REPLACE @doc IN organism_has_taxon RETURN NEW'
     results = db.AQLQuery(query, bindVars={'doc': doc})
-    print('upserted %s', results[0]['_id'])
+    print('upserted %s' % results[0]['_id'])
     return created_docs
 
 
@@ -129,8 +129,12 @@ def import_annotation_feature(genbank, created_docs, db):
             doc[name] = val[0]
         locus_tag = feature.qualifiers['locus_tag'][0]
         search = {'locus_tag': locus_tag}
-        query = "UPSERT @search INSERT @doc REPLACE @doc IN feature"
-        db.AQLQuery(query, bindVars={'doc': doc, 'search': search})
+        query = "UPSERT @search INSERT @doc REPLACE @doc IN feature RETURN NEW"
+        results = db.AQLQuery(query, bindVars={'doc': doc, 'search': search})
+        # Upsert an edge from the feature to the annotation
+        query = "UPSERT @doc INSERT @doc REPLACE @doc IN annotation_has_feature"
+        doc = {'_from': created_docs['annotation'], '_to': results[0]['_id']}
+        db.AQLQuery(query, bindVars={'doc': doc})
         upsert_count += 1
     print('created/replaced %d genes' % upsert_count)
     return created_docs
