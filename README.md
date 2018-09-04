@@ -38,6 +38,16 @@ First, convert the genbank file into a set of CSV data files:
 $ python genbank-to-csv.py ncbi-data/my-genome.gb
 ```
 
+### Start the Foxx service
+
+A small sample Foxx service is located in `./import-genome-service` for creating and fetching taxa. First, zip it up:
+
+```sh
+$ (cd import-genome-service && zip -r service *)
+```
+
+Then go to the web UI at localhost:8529, go to "services", "add service", "upload", and select `./import-genome-service/service.zip`. Once it is set up, click the "API" tab to play with the swagger API.
+
 ## The source data
 
 Two genomes in genbank format can be found in `/ncbi-data`:
