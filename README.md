@@ -1,10 +1,13 @@
-# Genbank to ArangoDB
+# Biochemistry data importer for ArangoDB
 
-This is an experimental utility that takes Genbank files and imports them into an ArangoDB graph.
+This is an experimental utility that imports biochemistry data and into an ArangoDB graph.
 
 ## Usage
 
 Have a running ArangoDB server on `localhost:8529`
+
+All import actions are "upserts", meaning the entries are inserted if they don't exist, and are
+updated if they already exist.
 
 ### Importing a genome
 
