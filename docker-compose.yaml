@@ -1,7 +1,5 @@
 version: '3'
 
-# Clustered arangodb build
-
 
 services:
 
@@ -12,4 +10,4 @@ services:
     environment:
       - ARANGO_ROOT_PASSWORD=password
     volumes:
-      - ./arangodb-data:/data
+      - ./data:/data
