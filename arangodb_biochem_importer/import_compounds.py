@@ -55,6 +55,8 @@ if __name__ == '__main__':
                 to_insert.append(row_data)
                 for (idx, col) in enumerate(row):
                     row_data[headers[idx]] = col
+                # Remove any *_c0 or *_e0 suffixes
+                row_data['_key'] = row_data['_key'].replace('_c0', '').replace('_e0', '')
         result = compound.bulkSave(to_insert, onDuplicate="update")
         print('Saved compounds', result)
     end = int(time.time() * 1000)
