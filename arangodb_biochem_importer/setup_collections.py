@@ -4,14 +4,14 @@ def setup_collections(db, vertices, edges):
     """
     Create all the given vertices and edges if they don't exist.
     """
-    print('required vertexes: ' + ', '.join(vertices))
+    print('required vertexes: ' + (', '.join(vertices) or 'none'))
     for name in vertices:
         if db.hasCollection(name):
             print('  has "%s" vertex' % name)
         else:
             db.createCollection(name=name)
             print('  created %s vertex' % name)
-    print('required edges: ' + ', '.join(edges))
+    print('required edges: ' + (', '.join(edges) or 'none'))
     for name in edges:
         if db.hasCollection(name):
             print('  has "%s" edge' % name)

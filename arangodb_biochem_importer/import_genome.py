@@ -3,8 +3,8 @@ import sys
 import os
 import time
 from Bio import SeqIO
-from pyArango.connection import Connection
 
+from init_db import init_db
 from download_genbank_file import download_genbank_file
 from setup_collections import setup_collections
 
@@ -146,31 +146,24 @@ if __name__ == '__main__':
     if len(sys.argv) <= 1:
         sys.stderr.write('Provide an accession ID (like GCF_xyz) of a genome to download.\n')
         exit(1)
-    username = os.environ.get('DB_USERNAME', 'root')
-    password = os.environ.get('DB_PASSWORD', 'password')
-    db_name = os.environ.get('DB_NAME', '_system')
-    # Connect to the database
-    try:
-        conn = Connection(username=username, password=password)
-    except Exception as err:
-        sys.stderr.write(str(err) + '\n')
-        exit(1)
-    finally:
-        print('database connection established.')
-    db = conn[db_name]
-    # Call each procedure
+    db = init_db()
+    # Download the genbank files
     genbank_dir = download_genbank_file(sys.argv[1])
+    # Set up the database collections
     vertices = ['organism', 'taxon', 'genome', 'gene']
     edges = ['child_of', 'contains']
     setup_collections(db, vertices, edges)
+    # For every genbank file, create all the vertices and edges
     for path in os.listdir(genbank_dir):
+        # genbank_path is a temporary directory
         genbank_path = os.path.join(genbank_dir, path)
+        # genbank is a biopython SeqRecord object
         genbank = load_genbank(genbank_path, db)
         organism_id = import_organism(genbank, db)
         import_taxonomy(genbank, organism_id, db)
         genome_id = import_genome(genbank, organism_id, db)
         import_genes(genbank, genome_id, db)
-        print('*' * 80)
+    # Remove all the genbank files
     shutil.rmtree(genbank_dir)
     end = int(time.time() * 1000)
     print('total running time in ms: %d' % (end - start))
