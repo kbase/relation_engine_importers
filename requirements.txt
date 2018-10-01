@@ -1,2 +1,3 @@
 biopython==1.72
 pyarango==1.3.2
+parsec==3.3
