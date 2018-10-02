@@ -2,6 +2,25 @@
 
 This is an experimental utility that imports biochemistry data and into an ArangoDB graph.
 
+## Setup
+
+With Python 3 installed, create and activate a virtualenv:
+
+```sh
+$ python -m venv env
+$ source env/bin/activate
+```
+
+Then install dependencies:
+
+```sh
+$ make install
+# (This runs: pip install --extra-index-url https://pypi.anaconda.org/kbase/simple -r requirements.txt)
+```
+
+Later, you can deactivate the virtual environment by running `deactivate`. If your environment gets
+screwed up, simply remove the `./env` folder and reinitialize everything.
+
 ## Usage
 
 Have a running ArangoDB server on `localhost:8529`
