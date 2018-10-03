@@ -1,6 +1,8 @@
 """
 Parse a boolean equation of genes such as:
-(L0282 and L0283 and (L37667 or L0269) and Unknown and (L0312 or L0311 or L0281) and L102491 and L0307 and L182797 and (L0302 or L0300 or L0301) and L108430 and Unknown and L0280 and L108989 and L0290 and L0298 and L0274 and L0279 and L0287 and L0275 and L0292 and L102317 and L0304 and L0291)
+(L0282 and L0283 and (L37667 or L0269) and Unknown and (L0312 or L0311 or L0281) and L102491 and
+L0307 and L182797 and (L0302 or L0300 or L0301) and L108430 and Unknown and L0280 and L108989 and
+L0290 and L0298 and L0274 and L0279 and L0287 and L0275 and L0292 and L102317 and L0304 and L0291)
 
 This describes a required set of active genes for a reaction to occur in a cell.
 

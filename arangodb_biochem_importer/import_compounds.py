@@ -26,38 +26,61 @@ header_transforms = {
 }
 
 
+def setup():
+    """Initialize the db connection and collections and return the connection."""
+    db = init_db()
+    vertices = ['compound']
+    setup_collections(db, vertices, [])
+    return db
+
+
+def import_compounds(file_path):
+    """
+    Iterate over every row in a TSV file and import each as a compound document.
+    We don't yet create edges for compounds.
+    """
+    compound = db.collections['compound']
+    with open(file_path, newline='') as csv_fd:
+        reader = csv.reader(csv_fd, delimiter='\t', quotechar='"')
+        headers = next(reader)
+        for (idx, h) in enumerate(headers):
+            headers[idx] = header_transforms.get(h, h)
+        to_insert = []
+        for row in reader:
+            row_data = {}  # type: dict
+            to_insert.append(row_data)
+            for (idx, col) in enumerate(row):
+                row_data[headers[idx]] = col
+            # Remove any *_c0 or *_e0 suffixes
+            row_data['_key'] = row_data['_key'].replace('_c0', '').replace('_e0', '')
+    result = compound.bulkSave(to_insert, onDuplicate="update")
+    return result
+
+
+def get_compound_files(dir_path):
+    """Get all the compound filepaths for a directory ('*compounds.tsv')"""
+    file_pattern = r'.*compounds\.tsv'
+    for file_name in os.listdir(dir_path):
+        if re.search(file_pattern, file_name):
+            # Yield the full path
+            yield os.path.join(dir_path, file_name)
+
+
 if __name__ == '__main__':
+    """
+    Simple command-line API:
+    python arangodb_biochem_importer/import_compounds.py <path-to-directory-of-compound-files>
+
+    Where all compound files are TSVs with the file name '*compounds.tsv'
+    """
     start = int(time.time() * 1000)
     if len(sys.argv) <= 1:
         sys.stderr.write('Provide the directory path containing *compounds.tsv files.')
         exit(1)
-    db = init_db()
-    vertices = ['compound']
-    setup_collections(db, vertices, [])
-    compound = db.collections['compound']
-    print(dir(compound))
+    db = setup()
     compounds_dir = os.path.abspath(sys.argv[1])
-    file_pattern = r'.*compounds\.tsv'
-    for filename in os.listdir(compounds_dir):
-        if not re.search(file_pattern, filename):
-            continue
-        fullpath = os.path.join(compounds_dir, filename)
-        print('importing from tsv file %s' % fullpath)
-        with open(fullpath, newline='') as csv_fd:
-            reader = csv.reader(csv_fd, delimiter='\t', quotechar='"')
-            headers = next(reader)
-            for (idx, h) in enumerate(headers):
-                headers[idx] = header_transforms.get(h, h)
-            count = 0
-            to_insert = []
-            for row in reader:
-                row_data = {}  # type: dict
-                to_insert.append(row_data)
-                for (idx, col) in enumerate(row):
-                    row_data[headers[idx]] = col
-                # Remove any *_c0 or *_e0 suffixes
-                row_data['_key'] = row_data['_key'].replace('_c0', '').replace('_e0', '')
-        result = compound.bulkSave(to_insert, onDuplicate="update")
+    for file_path in get_compound_files(compounds_dir):
+        print('importing from tsv file %s' % file_path)
+        result = import_compounds(file_path)
         print('Saved compounds', result)
-    end = int(time.time() * 1000)
-    print('total running time in ms: %d' % (end - start))
+    print('total running time in ms: %d' % (int(time.time() * 1000) - start))
