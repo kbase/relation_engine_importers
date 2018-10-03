@@ -21,12 +21,18 @@ $ make install
 Later, you can deactivate the virtual environment by running `deactivate`. If your environment gets
 screwed up, simply remove the `./env` folder and reinitialize everything.
 
+Finally, you can run the tests with:
+
+```sh
+$ make test
+```
+
 ## Usage
 
-Have a running ArangoDB server on `localhost:8529`
+Have a running ArangoDB server on `localhost:8529`.
 
-All import actions are "upserts", meaning the entries are inserted if they don't exist, and are
-updated if they already exist.
+All import actions are merge-based "upserts", meaning the entries are inserted if they don't exist, and are
+either updated or replaced if they already exist.
 
 ### Importing a genome
 
@@ -40,7 +46,7 @@ This will pull the genome from NCBI and import the following vertices and edges:
 
 * genomes
 * genes
-* genomes -> *contains* -> genes
+* genomes -> *genome_contains_gene* -> genes
 
 ### Importing chemical compounds
 
@@ -75,9 +81,9 @@ $ python import_reactions.py GCF_000021285.1.mdl-reactions.tsv
 This creates the following nodes/edges:
 
 * reactions
-* reaction_components
-* reaction_components -> *contains* -> genes
-* reaction_components -> *produces* -> reaction
+* reaction_complexes
+* reaction_complexes -> *complex_contains_gene* -> genes
+* reaction_complexes -> *complex_produces_reaction* -> reaction
 
 ### Importing reaction similarities
 
@@ -87,13 +93,4 @@ Provide a `.tsv` with these headers:
 reactionID1,reactionID2,distance
 ```
 
-This will import `similarTo` edges for each pair of reactions
-
-### Genbank file importer
-
-Run it with:
-
-```sh
-$ python import_genbank.py ncbi-data/my-genome.gb
-```
-
+This will import `reactions -> similarTo -> reactions` edges.
