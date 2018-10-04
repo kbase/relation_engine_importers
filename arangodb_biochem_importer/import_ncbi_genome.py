@@ -12,7 +12,7 @@ from setup_collections import setup_collections
 def setup():
     """Setup the database connection and collections; returns the connection."""
     db = init_db()
-    vertices = ['organisms', 'taxa', 'genomes', 'gene']
+    vertices = ['organisms', 'taxa', 'genomes', 'genes']
     edges = ['child_of_taxon', 'genome_has_gene', 'organism_has_genome']
     setup_collections(db, vertices, edges)
     return db
@@ -34,7 +34,7 @@ def import_organism(genbank, db):
     """Import the organism collection."""
     name = genbank.annotations['organism']
     print('importing organism named %s' % name)
-    query = "UPSERT @doc INSERT @doc REPLACE @doc IN organism RETURN NEW"
+    query = "UPSERT @doc INSERT @doc REPLACE @doc IN organisms RETURN NEW"
     doc = {'name': name}
     results = db.AQLQuery(query, bindVars={'doc': doc})
     organism_id = results[0]['_id']
@@ -46,18 +46,18 @@ def import_taxonomy(genbank, organism_id, db):
     """Import the taxonomy tree."""
     print('importing taxonomy')
     annot = genbank.annotations
-    taxons = [t for t in annot['taxonomy']]
+    taxa = [t for t in annot['taxonomy']]
     name_id_dict = {}
-    for t in taxons:
+    for t in taxa:
         doc = {'name': t}
-        query = 'UPSERT @doc INSERT @doc REPLACE @doc IN taxon RETURN NEW'
+        query = 'UPSERT @doc INSERT @doc REPLACE @doc IN taxa RETURN NEW'
         results = db.AQLQuery(query, bindVars={'doc': doc})
         _id = results[0]['_id']
         name_id_dict[t] = _id
         print('  upserted taxon %s' % t)
-    print('importing parent-child edges between all taxons')
+    print('importing parent-child edges between all taxa')
     # Create a list of (parent, child) taxon pairs
-    taxon_pairs = [(taxons[idx], taxons[idx + 1]) for idx in range(len(taxons) - 1)]
+    taxon_pairs = [(taxa[idx], taxa[idx + 1]) for idx in range(len(taxa) - 1)]
     for (parent, child) in taxon_pairs:
         # Check if the taxon_has_parent edge already exists
         child_id = name_id_dict[child]
@@ -66,7 +66,7 @@ def import_taxonomy(genbank, organism_id, db):
         query = 'UPSERT @doc INSERT @doc REPLACE @doc IN child_of_taxon RETURN NEW'
         results = db.AQLQuery(query, bindVars={'doc': doc})
         print('  upserted edge from %s to %s' % (child, parent))
-    organism_taxon_id = name_id_dict[taxons[-1]]
+    organism_taxon_id = name_id_dict[taxa[-1]]
     doc = {'_from': organism_id, '_to': organism_taxon_id}
     query = 'UPSERT @doc INSERT @doc REPLACE @doc IN child_of_taxon RETURN NEW'
     results = db.AQLQuery(query, bindVars={'doc': doc})
@@ -102,7 +102,7 @@ def import_genome_document(genbank, organism_id, db):
         genome_data['annotation_data'][key] = val
     # Create or update the genome document
     print('importing genome %s' % genome_data['organism_name'])
-    query = "UPSERT @match INSERT @doc REPLACE @doc IN genome RETURN NEW"
+    query = "UPSERT @match INSERT @doc REPLACE @doc IN genomes RETURN NEW"
     results = db.AQLQuery(query, bindVars={'match': match_data, 'doc': genome_data})
     genome_id = results[0]['_id']
     print('  upserted genome ' + genome_id)
@@ -139,7 +139,7 @@ def import_genes(genbank, genome_id, db):
         locus_tags[doc['locus_tag']] = True
         match = {'_key': doc['locus_tag']}
         doc['_key'] = doc['locus_tag']
-        query = "UPSERT @match INSERT @doc REPLACE @doc IN gene RETURN NEW"
+        query = "UPSERT @match INSERT @doc REPLACE @doc IN genes RETURN NEW"
         results = db.AQLQuery(query, bindVars={'doc': doc, 'match': match})
         gene_id = results[0]['_id']
         # Upsert an edge from the gene to the genome
@@ -153,7 +153,8 @@ def import_genes(genbank, genome_id, db):
 def import_genomes(accession_id, db):
     """Download all the genome data for a given NCBI ID."""
     # Download the genbank files. `genbank_dir` is a temporary directory (removed below)
-    genbank_dir = download_genbank_file(sys.argv[1])
+    email = os.environ['ENTREZ_EMAIL']
+    genbank_dir = download_genbank_file(sys.argv[1], email)
     # For every genbank file, create all the vertices and edges
     for path in os.listdir(genbank_dir):
         genbank_path = os.path.join(genbank_dir, path)
@@ -172,6 +173,9 @@ if __name__ == '__main__':
     Simple CLI:
     python arangodb_biochem_importer/import_ncbi_genome.py GCF_123123123.1
     """
+    if 'ENTREZ_EMAIL' not in os.environ:
+        sys.stderr.write('Set the ENTREZ_EMAIL environment variable to your email address.')
+        exit(1)
     start = int(time.time() * 1000)
     if len(sys.argv) <= 1:
         sys.stderr.write('Provide an accession ID (like GCF_xyz) of a genome to download.\n')

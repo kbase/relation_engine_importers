@@ -3,13 +3,12 @@ import os
 from Bio import Entrez
 import tempfile
 
-Entrez.email = os.environ['ENTREZ_EMAIL']
 
-
-def download_genbank_file(accession_id):
+def download_genbank_file(accession_id, email):
     """
     Download a genbank file from an accesion ID such as GCF_1234.1
     """
+    Entrez.email = email
     is_valid_id = bool(re.search(r'GCF_\d\d\d\d\d\d\d\d\d\.\d', accession_id))
     if not is_valid_id:
         raise ValueError('Invalid genome ID "%s", should have the format GCF_NNNNNNNNN.N')
