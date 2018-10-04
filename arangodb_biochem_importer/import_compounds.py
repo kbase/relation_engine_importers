@@ -5,7 +5,7 @@ For each file:
 - Change the 'id' column into '_key' and snake case the others
 - Read the TSV file into an array of strings or something
 - Snake case all the columns
-- Import each row as a plain document in the 'compound' collection
+- Import each row as a plain document in the 'compounds' collection
 """
 import time
 import sys
@@ -29,7 +29,7 @@ header_transforms = {
 def setup():
     """Initialize the db connection and collections and return the connection."""
     db = init_db()
-    vertices = ['compound']
+    vertices = ['compounds']
     setup_collections(db, vertices, [])
     return db
 
@@ -39,7 +39,7 @@ def import_compounds(file_path):
     Iterate over every row in a TSV file and import each as a compound document.
     We don't yet create edges for compounds.
     """
-    compound = db.collections['compound']
+    compounds = db.collections['compounds']
     with open(file_path, newline='') as csv_fd:
         reader = csv.reader(csv_fd, delimiter='\t', quotechar='"')
         headers = next(reader)
@@ -53,7 +53,7 @@ def import_compounds(file_path):
                 row_data[headers[idx]] = col
             # Remove any *_c0 or *_e0 suffixes
             row_data['_key'] = row_data['_key'].replace('_c0', '').replace('_e0', '')
-    result = compound.bulkSave(to_insert, onDuplicate="update")
+    result = compounds.bulkSave(to_insert, onDuplicate="update")
     return result
 
 

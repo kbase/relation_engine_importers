@@ -35,9 +35,7 @@ rparen = lexeme(p.string(')'))
 symbol = lexeme(p.regex(r'[\d\w_-]+'))
 and_op = lexeme(p.string('and'))
 or_op = lexeme(p.string('or'))
-op = and_op | or_op
-
-atom = op | symbol
+op = lexeme(p.regex(r'(and|or)'))
 
 
 @p.generate('binary expression')
@@ -48,7 +46,9 @@ def binary_expr():
     return es
 
 
+atom = op | symbol
 expr = atom | binary_expr
+program = p.many(expr).skip(ignore)
 
 
 def parse_gpr(string):
@@ -60,5 +60,4 @@ def parse_gpr(string):
 
 if __name__ == '__main__':
     inp = sys.argv[1]
-    program = p.many(expr).skip(ignore)
     print(parse_gpr(inp))
