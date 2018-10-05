@@ -34,7 +34,6 @@ import sys
 import os
 import re
 import csv
-import pprint
 import hashlib
 
 from init_db import init_db
@@ -42,7 +41,7 @@ from setup_collections import setup_collections
 from parse_gpr import parse_gpr
 from flatten_boolean_expr import flatten_expr, remove_unknowns
 
-pp = pprint.PrettyPrinter(indent=2)
+db = init_db()
 
 
 # Transformations on the header names
@@ -59,9 +58,8 @@ header_transforms = {
 
 def setup():
     """Initialize the db connection and collections and return the connection."""
-    db = init_db()
     vertices = ['reactions', 'gene_complexes']
-    edges = ['complex_has_gene', 'complex_produces_reaction']
+    edges = ['complex_has_gene', 'complex_produces_reaction', 'reaction_has_compound']
     setup_collections(db, vertices, edges)
     return db
 
@@ -84,10 +82,12 @@ def import_reaction(row, headers):
         print('no gene complexes. continuing..')
         return
     import_gene_complexes(complexes, reaction_id)
+    compound_equation = doc['equation']
+    import_compound_edges(compound_equation, reaction_id)
 
 
 def import_gene_complexes(complexes, reaction_id):
-    """Import the gene complex and all its edges."""
+    """Import the gene complex for a reaction and all of its edges."""
     # Insert the gene_complex document
     genes = db.collections['genes']
     complexes_str = str(complexes)
@@ -115,6 +115,21 @@ def import_gene_complexes(complexes, reaction_id):
             print('  upserted %s', results[0]['_id'])
 
 
+def import_compound_edges(equation, reaction_id):
+    """
+    Import all `reaction_has_compound` edges between a reaction and its compounds.
+    """
+    compounds = db.collections['compounds']
+    keys = re.findall(r'cpd\d\d\d\d\d', equation)
+    print('importing reaction to compound edges')
+    for key in keys:
+        compound_id = compounds.name + '/' + key
+        doc = {'_from': reaction_id, '_to': compound_id}
+        query = "UPSERT @doc INSERT @doc REPLACE @doc IN reaction_has_compound RETURN NEW"
+        results = db.AQLQuery(query, bindVars={'doc': doc})
+        print('  upserted %s' % results[0]['_id'])
+
+
 def import_reactions_from_tsv(file_path):
     """
     Iterate over every row in a TSV file and import each as a reaction document.
@@ -136,6 +151,15 @@ def import_reactions_from_tsv(file_path):
     return result
 
 
+def import_reactions_dir(dir_path):
+    """Import many reactions for many genomes from a directory of TSV files."""
+    reactions_dir = os.path.abspath(dir_path)
+    for file_path in get_reaction_files(reactions_dir):
+        print('importing from tsv file %s' % file_path)
+        result = import_reactions_from_tsv(file_path)
+        print('Saved reactions', result)
+
+
 def get_reaction_files(dir_path):
     """Get all the reaction filepaths for a directory ('*reactions.tsv')"""
     file_pattern = r'.*reactions\.tsv'
@@ -153,13 +177,8 @@ if __name__ == '__main__':
     Where all reaction files are TSVs with the file name '*reactions.tsv'
     """
     start = int(time.time() * 1000)
+    setup()
     if len(sys.argv) <= 1:
         sys.stderr.write('Provide the directory path containing *reactions.tsv files.')
         exit(1)
-    db = setup()
-    reactions_dir = os.path.abspath(sys.argv[1])
-    for file_path in get_reaction_files(reactions_dir):
-        print('importing from tsv file %s' % file_path)
-        result = import_reactions_from_tsv(file_path)
-        print('Saved reactions', result)
-    print('total running time in ms: %d' % (int(time.time() * 1000) - start))
+    import_reactions_dir(sys.argv[1])
