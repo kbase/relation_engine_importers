@@ -1,6 +1,6 @@
 # Biochemistry data importer for ArangoDB
 
-This is an experimental utility that imports biochemistry data and into an ArangoDB graph.
+This is an experimental utility that imports biochemistry data into an ArangoDB graph.
 
 ## Setup
 

@@ -104,7 +104,7 @@ def import_gene_complexes(complexes, reaction_id):
     doc = {'_from': gene_complex_id, '_to': reaction_id}
     query = "UPSERT @doc INSERT @doc REPLACE @doc IN complex_produces_reaction RETURN NEW"
     results = db.AQLQuery(query, bindVars={'doc': doc})
-    print('  upserted %s', results[0]['_id'])
+    print('  upserted %s' % results[0]['_id'])
     # Import gene to complex link
     for comp in complexes:
         for locus_id in comp:
@@ -112,7 +112,7 @@ def import_gene_complexes(complexes, reaction_id):
             doc = {'_from': gene_complex_id, '_to': gene_id}
             query = "UPSERT @doc INSERT @doc REPLACE @doc IN complex_has_gene RETURN NEW"
             results = db.AQLQuery(query, bindVars={'doc': doc})
-            print('  upserted %s', results[0]['_id'])
+            print('  upserted %s' % results[0]['_id'])
 
 
 def import_compound_edges(equation, reaction_id):
