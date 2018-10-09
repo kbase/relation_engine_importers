@@ -68,6 +68,7 @@ def convert_expr_to_disjunction(expr):
     #   and: we last saw an 'and' operator and will append terms to previous conjunctions
     #   op: we last saw a term and are now expecting an operator
     mode = 'or'  # 'or' is concatenation. We want to start off by concatenating the first term.
+    conj = disj
     for lexeme in expr:
         if mode == 'and':
             conj = and_combination(disj, lexeme)

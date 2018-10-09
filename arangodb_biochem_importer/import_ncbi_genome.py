@@ -8,17 +8,18 @@ from init_db import init_db
 from download_genbank_file import download_genbank_file
 from setup_collections import setup_collections
 
+db = init_db()
+
 
 def setup():
     """Setup the database connection and collections; returns the connection."""
-    db = init_db()
     vertices = ['organisms', 'taxa', 'genomes', 'genes']
     edges = ['child_of_taxon', 'genome_has_gene', 'organism_has_genome']
     setup_collections(db, vertices, edges)
     return db
 
 
-def load_genbank(path, db):
+def load_genbank(path):
     """
     Load a genbank file as a Biopython object
     """
@@ -30,7 +31,7 @@ def load_genbank(path, db):
     return genbank
 
 
-def import_organism(genbank, db):
+def import_organism(genbank):
     """Import the organism collection."""
     name = genbank.annotations['organism']
     print('importing organism named %s' % name)
@@ -42,7 +43,7 @@ def import_organism(genbank, db):
     return organism_id
 
 
-def import_taxonomy(genbank, organism_id, db):
+def import_taxonomy(genbank, organism_id):
     """Import the taxonomy tree."""
     print('importing taxonomy')
     annot = genbank.annotations
@@ -73,7 +74,7 @@ def import_taxonomy(genbank, organism_id, db):
     print('  upserted edge between organism and final taxon')
 
 
-def import_genome_document(genbank, organism_id, db):
+def import_genome_document(genbank, organism_id):
     """
     Import a single `genome` doc with all the data from the genbank
     Insert a child_of edge between the genome and organism
@@ -97,7 +98,7 @@ def import_genome_document(genbank, organism_id, db):
         'comment': genbank.annotations['comment'],
         'annotation_data': {}
     }
-    annot_data = genbank.annotations['structured_comment'].get('Genome-Annotation-Data', {})
+    annot_data = genbank.annotations.get('structured_comment', {}).get('Genome-Annotation-Data', {})
     for (key, val) in annot_data.items():
         genome_data['annotation_data'][key] = val
     # Create or update the genome document
@@ -114,7 +115,7 @@ def import_genome_document(genbank, organism_id, db):
     return genome_id
 
 
-def import_genes(genbank, genome_id, db):
+def import_genes(genbank, genome_id):
     """Import gene data from the genbank file."""
     print('importing %d features from %s' % (len(genbank.features), genome_id))
     upsert_count = 0
@@ -150,20 +151,20 @@ def import_genes(genbank, genome_id, db):
     print('  upserted %d valid annotations' % upsert_count)
 
 
-def import_genomes(accession_id, db):
+def import_genomes(accession_id, skip_if_present=False):
     """Download all the genome data for a given NCBI ID."""
     # Download the genbank files. `genbank_dir` is a temporary directory (removed below)
     email = os.environ['ENTREZ_EMAIL']
-    genbank_dir = download_genbank_file(sys.argv[1], email)
+    genbank_dir = download_genbank_file(accession_id, email)
     # For every genbank file, create all the vertices and edges
     for path in os.listdir(genbank_dir):
         genbank_path = os.path.join(genbank_dir, path)
         # genbank is a biopython SeqRecord object
-        genbank = load_genbank(genbank_path, db)
-        organism_id = import_organism(genbank, db)
-        import_taxonomy(genbank, organism_id, db)
-        genome_id = import_genome_document(genbank, organism_id, db)
-        import_genes(genbank, genome_id, db)
+        genbank = load_genbank(genbank_path)
+        organism_id = import_organism(genbank)
+        import_taxonomy(genbank, organism_id)
+        genome_id = import_genome_document(genbank, organism_id)
+        import_genes(genbank, genome_id)
     # Remove all the downloaded genbank files
     shutil.rmtree(genbank_dir)
 
@@ -182,6 +183,6 @@ if __name__ == '__main__':
         exit(1)
     db = setup()
     accession_id = sys.argv[1]
-    import_genomes(accession_id, db)
+    import_genomes(accession_id)
     end = int(time.time() * 1000)
     print('total running time in ms: %d' % (end - start))

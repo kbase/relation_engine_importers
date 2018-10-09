@@ -69,6 +69,8 @@ def import_reaction(row, headers):
     doc = {}  # type: dict
     for (idx, col) in enumerate(row):
         doc[headers[idx]] = col
+    if '_key' not in doc:
+        return
     # Insert the reaction document into `reactions`
     print('importing reaction %s' % doc['_key'])
     match = {'_key': doc['_key']}

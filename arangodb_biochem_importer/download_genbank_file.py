@@ -11,7 +11,7 @@ def download_genbank_file(accession_id, email):
     Entrez.email = email
     is_valid_id = bool(re.search(r'GCF_\d\d\d\d\d\d\d\d\d\.\d', accession_id))
     if not is_valid_id:
-        raise ValueError('Invalid genome ID "%s", should have the format GCF_NNNNNNNNN.N')
+        raise ValueError('Invalid genome ID "%s", should have the format GCF_NNNNNNNNN.N' % accession_id)
     print('Searching...')
     handle = Entrez.esearch(db="nucleotide", term=accession_id + '[ALL]')
     record = Entrez.read(handle)

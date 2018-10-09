@@ -24,7 +24,7 @@ def lexeme(parser):
 # All our basic tokens
 lparen = lexeme(p.string('('))
 rparen = lexeme(p.string(')'))
-symbol = lexeme(p.regex(r'[\d\w_-]+'))
+symbol = lexeme(p.regex(r'[\d\w_\-\.]+'))
 op = lexeme(p.regex(r'(and|or)'))
 
 
