@@ -13,8 +13,6 @@ if __name__ == '__main__':
     ids = set()  # type: set
     for path in os.listdir(sys.argv[1]):
         found = re.findall(pattern, path)
-        if not found:
-            continue
         ids = ids | set(found)
     for gcf_id in ids:
         print('gcf_id', gcf_id)
