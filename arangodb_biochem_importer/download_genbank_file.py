@@ -17,7 +17,8 @@ def download_genbank_file(accession_id, email, dir_path=None):
     record = Entrez.read(handle)
     handle.close()
     if not record.get('IdList'):
-        raise ValueError('Invalid search results: ' + str(record))
+        print(str(record))
+        raise ValueError('Invalid search results for %s' % accession_id)
     if not dir_path:
         dir_path = tempfile.mkdtemp()
     # The first id will be the chromosome sequence
