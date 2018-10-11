@@ -26,6 +26,7 @@ def download_genbanks_to_dir(accession_ids, parent_dir_path):
     We want to do this serially as NCBI has some strict restrictions.
     """
     email = os.environ['ENTREZ_EMAIL']
+    fd_write = open(os.path.join(parent_dir_path, 'failures.log'), 'w')
     for acc_id in accession_ids:
         dir_path = os.path.join(parent_dir_path, acc_id)
         if os.path.isdir(dir_path):
@@ -33,7 +34,12 @@ def download_genbanks_to_dir(accession_ids, parent_dir_path):
             continue
         else:
             os.mkdir(dir_path)
-        download_genbank_file(acc_id, email, dir_path)
+        try:
+            download_genbank_file(acc_id, email, dir_path)
+        except Exception as err:
+            print('Encountered exception downloading %s' % acc_id)
+            fd_write.write('Failed on %s\n' % acc_id)
+    fd_write.close()
     return parent_dir_path
 
 
@@ -52,5 +58,5 @@ if __name__ == '__main__':
         print('Output directory %s does not exist. Creating it.' % output_dir)
         os.mkdir(output_dir)
     ids = get_all_accession_ids_from_directory(sys.argv[1])
-    print('ids', ids)
+    print('Downloading %s genomes' % len(ids))
     download_genbanks_to_dir(ids, output_dir)
