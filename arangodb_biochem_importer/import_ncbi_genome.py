@@ -1,11 +1,7 @@
-import shutil
-import sys
 import os
-import time
 from Bio import SeqIO
 
 from init_db import init_db
-from download_genbank_file import download_genbank_file
 from setup_collections import setup_collections
 
 db = init_db()
@@ -20,9 +16,7 @@ def setup():
 
 
 def load_genbank(path):
-    """
-    Load a genbank file as a Biopython object
-    """
+    """Load a genbank file as a Biopython object."""
     print('opening genbank file.')
     print('  size is %d bytes' % os.path.getsize(path))
     with open(path, 'r') as fd:
@@ -134,7 +128,7 @@ def import_genes(genbank, genome_id):
             # For some reason, all values under .qualifiers are lists of one elem
             doc[name] = ', '.join(val)
         if not doc.get('locus_tag'):
-            print('No locus_tag on', doc)
+            # No locus tag; skip this one
             continue
         # Update or insert based on the locus tag
         locus_tags[doc['locus_tag']] = True
@@ -151,11 +145,8 @@ def import_genes(genbank, genome_id):
     print('  upserted %d valid annotations' % upsert_count)
 
 
-def import_genomes(accession_id, skip_if_present=False):
+def import_genomes(genbank_dir):
     """Download all the genome data for a given NCBI ID."""
-    # Download the genbank files. `genbank_dir` is a temporary directory (removed below)
-    email = os.environ['ENTREZ_EMAIL']
-    genbank_dir = download_genbank_file(accession_id, email)
     # For every genbank file, create all the vertices and edges
     for path in os.listdir(genbank_dir):
         genbank_path = os.path.join(genbank_dir, path)
@@ -165,24 +156,3 @@ def import_genomes(accession_id, skip_if_present=False):
         import_taxonomy(genbank, organism_id)
         genome_id = import_genome_document(genbank, organism_id)
         import_genes(genbank, genome_id)
-    # Remove all the downloaded genbank files
-    shutil.rmtree(genbank_dir)
-
-
-if __name__ == '__main__':
-    """
-    Simple CLI:
-    python arangodb_biochem_importer/import_ncbi_genome.py GCF_123123123.1
-    """
-    if 'ENTREZ_EMAIL' not in os.environ:
-        sys.stderr.write('Set the ENTREZ_EMAIL environment variable to your email address.')
-        exit(1)
-    start = int(time.time() * 1000)
-    if len(sys.argv) <= 1:
-        sys.stderr.write('Provide an accession ID (like GCF_xyz) of a genome to download.\n')
-        exit(1)
-    db = setup()
-    accession_id = sys.argv[1]
-    import_genomes(accession_id)
-    end = int(time.time() * 1000)
-    print('total running time in ms: %d' % (end - start))

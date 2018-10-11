@@ -1,19 +1,27 @@
 import re
 import sys
 import os
+import time
 
 from import_ncbi_genome import import_genomes
 
 
 if __name__ == '__main__':
+    start = int(time.time() * 1000)
     if not len(sys.argv) >= 2:
-        sys.stderr.write('Pass in the directory path with genome names')
+        sys.stderr.write('Pass in the directory path of many subdirectories containing genbank files.\n')
         sys.exit(1)
-    pattern = r'(GCF_\d\d\d\d\d\d\d\d\d\.\d)'
-    ids = set()  # type: set
-    for path in os.listdir(sys.argv[1]):
-        found = re.findall(pattern, path)
-        ids = ids | set(found)
-    for gcf_id in ids:
-        print('gcf_id', gcf_id)
-        import_genomes(gcf_id)
+    parent_dir = sys.argv[1]
+    if not os.path.isdir(parent_dir):
+        sys.stderr.write('The parent directory %s does not exist\n' % parent_dir)
+        sys.exit(1)
+    for subdir in os.listdir(parent_dir):
+        if not re.search(r'GCF_\d\d\d\d\d\d\d\d\d\.\d', subdir):
+            # Subdirectory must match GCF accession ID format
+            continue
+        full_path = os.path.join(parent_dir, subdir)
+        print('Importing genome in %s' % subdir)
+        import_genomes(full_path)
+        print('Done importing %s' % subdir)
+    end = int(time.time() * 1000)
+    print('Total time running is %s' % (end - start))
