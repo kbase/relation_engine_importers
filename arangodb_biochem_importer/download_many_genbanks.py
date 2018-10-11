@@ -31,6 +31,8 @@ def download_genbanks_to_dir(accession_ids, parent_dir_path):
         if os.path.isdir(dir_path):
             print('%s already exists, skipping...' % acc_id)
             continue
+        else:
+            os.mkdir(dir_path)
         download_genbank_file(acc_id, email, dir_path)
     return parent_dir_path
 
