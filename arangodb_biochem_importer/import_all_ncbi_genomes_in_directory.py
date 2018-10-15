@@ -3,7 +3,7 @@ import sys
 import os
 import time
 
-from import_ncbi_genome import import_genomes
+from import_ncbi_genome import import_genomes, setup
 
 
 if __name__ == '__main__':
@@ -15,6 +15,7 @@ if __name__ == '__main__':
     if not os.path.isdir(parent_dir):
         sys.stderr.write('The parent directory %s does not exist\n' % parent_dir)
         sys.exit(1)
+    setup()
     for subdir in os.listdir(parent_dir):
         if not re.search(r'GCF_\d\d\d\d\d\d\d\d\d\.\d', subdir):
             # Subdirectory must match GCF accession ID format
