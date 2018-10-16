@@ -79,17 +79,17 @@ def import_genome_document(genbank, organism_id):
         '_key': genbank.id,
         'name': genbank.name,
         'description': genbank.description,
-        'molecule_type': genbank.annotations['molecule_type'],
-        'topology': genbank.annotations['topology'],
-        'data_file_division': genbank.annotations['data_file_division'],
-        'date': genbank.annotations['date'],
-        'accessions': genbank.annotations['accessions'],
-        'sequence_version': genbank.annotations['sequence_version'],
-        'source': genbank.annotations['source'],
+        'molecule_type': genbank.annotations('molecule_type', ''),
+        'topology': genbank.annotations.get('topology', ''),
+        'data_file_division': genbank.annotations.get('data_file_division', ''),
+        'date': genbank.annotations.get('date', ''),
+        'accessions': genbank.annotations.get('accessions', []),
+        'sequence_version': genbank.annotations.get('sequence_version', ''),
+        'source': genbank.annotations.get('source', ''),
         'dbxrefs': genbank.dbxrefs,
-        'organism_name': genbank.annotations['organism'],
-        'taxonomy': ', '.join(genbank.annotations['taxonomy']),
-        'comment': genbank.annotations['comment'],
+        'organism_name': genbank.annotations.get('organism', ''),
+        'taxonomy': ', '.join(genbank.annotations.get('taxonomy', '')),
+        'comment': genbank.annotations.get('comment', ''),
         'annotation_data': {}
     }
     annot_data = genbank.annotations.get('structured_comment', {}).get('Genome-Annotation-Data', {})
@@ -142,6 +142,7 @@ def import_genes(genbank, genome_id):
         query = "UPSERT @doc INSERT @doc REPLACE @doc IN genome_has_gene"
         db.AQLQuery(query, bindVars={'doc': doc})
         upsert_count += 1
+    # TODO do a bulk save here
     print('  upserted %d valid annotations' % upsert_count)
 
 

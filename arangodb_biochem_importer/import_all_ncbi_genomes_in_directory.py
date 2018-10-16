@@ -6,7 +6,7 @@ import time
 from import_ncbi_genome import import_genomes, setup
 
 
-if __name__ == '__main__':
+def main():
     start = int(time.time() * 1000)
     if not len(sys.argv) >= 2:
         sys.stderr.write('Pass in the directory path of many subdirectories containing genbank files.\n')
@@ -26,3 +26,7 @@ if __name__ == '__main__':
         print('Done importing %s' % subdir)
     end = int(time.time() * 1000)
     print('Total time running is %s' % (end - start))
+
+
+if __name__ == '__main__':
+    main()

@@ -36,7 +36,7 @@ def download_genbanks_to_dir(accession_ids, parent_dir_path):
             os.mkdir(dir_path)
         try:
             download_genbank_file(acc_id, email, dir_path)
-        except Exception as err:
+        except Exception:
             print('Encountered exception downloading %s' % acc_id)
             fd_write.write('Failed on %s\n' % acc_id)
     fd_write.close()
