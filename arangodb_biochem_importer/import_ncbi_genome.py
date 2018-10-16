@@ -79,7 +79,7 @@ def import_genome_document(genbank, organism_id):
         '_key': genbank.id,
         'name': genbank.name,
         'description': genbank.description,
-        'molecule_type': genbank.annotations('molecule_type', ''),
+        'molecule_type': genbank.annotations.get('molecule_type', ''),
         'topology': genbank.annotations.get('topology', ''),
         'data_file_division': genbank.annotations.get('data_file_division', ''),
         'date': genbank.annotations.get('date', ''),
@@ -112,8 +112,8 @@ def import_genome_document(genbank, organism_id):
 def import_genes(genbank, genome_id):
     """Import gene data from the genbank file."""
     print('importing %d features from %s' % (len(genbank.features), genome_id))
-    upsert_count = 0
-    locus_tags = {}  # type: dict
+    vertices_to_insert = []  # type: list
+    edges_to_insert = []  # type: list
     for feature in genbank.features:
         if feature.type == 'source':
             continue
@@ -130,20 +130,20 @@ def import_genes(genbank, genome_id):
         if not doc.get('locus_tag'):
             # No locus tag; skip this one
             continue
-        # Update or insert based on the locus tag
-        locus_tags[doc['locus_tag']] = True
-        match = {'_key': doc['locus_tag']}
         doc['_key'] = doc['locus_tag']
-        query = "UPSERT @match INSERT @doc REPLACE @doc IN genes RETURN NEW"
-        results = db.AQLQuery(query, bindVars={'doc': doc, 'match': match})
-        gene_id = results[0]['_id']
-        # Upsert an edge from the gene to the genome
-        doc = {'_from': genome_id, '_to': gene_id}
-        query = "UPSERT @doc INSERT @doc REPLACE @doc IN genome_has_gene"
-        db.AQLQuery(query, bindVars={'doc': doc})
-        upsert_count += 1
-    # TODO do a bulk save here
-    print('  upserted %d valid annotations' % upsert_count)
+        # Update or insert based on the locus tag
+        vertices_to_insert.append(doc)
+        gene_id = 'genes/' + doc['_key']
+        edges_to_insert.append({
+            '_from': gene_id,
+            '_to': genome_id
+        })
+    genes = db.collections['genes']
+    genome_has_gene = db.collections['genome_has_gene']
+    node_count = genes.bulkSave(vertices_to_insert, onDuplicate='update')
+    edge_count = genome_has_gene.bulkSave(edges_to_insert, onDuplicate='update')
+    print('  upserted %s genes' % node_count)
+    print('  upserted %s genome_has_gene edges' % edge_count)
 
 
 def import_genomes(genbank_dir):

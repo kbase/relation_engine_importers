@@ -25,7 +25,7 @@ def main():
         import_genomes(full_path)
         print('Done importing %s' % subdir)
     end = int(time.time() * 1000)
-    print('Total time running is %s' % (end - start))
+    print('total time running in ms: %s' % (end - start))
 
 
 if __name__ == '__main__':
