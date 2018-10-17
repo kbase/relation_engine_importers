@@ -16,14 +16,23 @@ def main():
         sys.stderr.write('The parent directory %s does not exist\n' % parent_dir)
         sys.exit(1)
     setup()
+    failures = []  # type: list
     for subdir in os.listdir(parent_dir):
         if not re.search(r'GCF_\d\d\d\d\d\d\d\d\d\.\d', subdir):
             # Subdirectory must match GCF accession ID format
             continue
         full_path = os.path.join(parent_dir, subdir)
-        print('Importing genome in %s' % subdir)
-        import_genomes(full_path)
-        print('Done importing %s' % subdir)
+        print('importing genome in %s' % subdir)
+        try:
+            import_genomes(full_path)
+        except Exception as err:
+            failures.append(str(err))
+        print('  done importing %s' % subdir)
+    # Write failed imports out to a log file
+    failures_file_path = os.path.join(parent_dir, 'failures.log')
+    with open(failures_file_path, 'w') as fd_write:
+        fd_write.write('\n'.join(failures))
+    print('wrote failed imports to %s' % failures_file_path)
     end = int(time.time() * 1000)
     print('total time running in ms: %s' % (end - start))
 

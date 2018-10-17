@@ -20,8 +20,10 @@ def load_genbank(path):
     print('opening genbank file.')
     print('  size is %d bytes' % os.path.getsize(path))
     with open(path, 'r') as fd:
-        genbank = SeqIO.read(fd, 'genbank')
-    print('  total features: %d' % len(genbank.features))
+        try:
+            genbank = SeqIO.read(fd, 'genbank')
+        except Exception as err:
+            raise Exception(path + '\t' + str(err))
     return genbank
 
 
