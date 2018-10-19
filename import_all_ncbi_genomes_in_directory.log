@@ -1,8 +1,0 @@
-INFO:root:starting run at 1539914574838
-INFO:root:generating import data for GCF_999999999.1
-ERROR:root:failed to generate example_data/test_output/GCF_999999999.1	example_data/test_output/GCF_999999999.1/123123123.gb	No records found in handle
-INFO:root:generating import data for GCF_000015945.1
-INFO:root:generating import data for GCF_000093165.1
-INFO:root:generating import data for GCF_001525625.1
-INFO:root:generating import data for GCF_000010505.1
-INFO:root:total time running in ms: 1035
