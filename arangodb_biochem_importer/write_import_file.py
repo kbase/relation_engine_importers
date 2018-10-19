@@ -1,6 +1,5 @@
 import os
 import json
-from collections import defaultdict
 
 
 def write_import_file(row_gen, output_dir):

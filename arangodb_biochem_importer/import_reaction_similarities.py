@@ -4,17 +4,8 @@ import os
 import csv
 
 from init_db import init_db
-from setup_collections import setup_collections
 
 similarity_threshold = 0.0
-
-
-def setup():
-    """Initialize the db connection and collections and return the connection."""
-    db = init_db()
-    edges = ['reaction_similar_to']
-    setup_collections(db, [], edges)
-    return db
 
 
 def import_similarities(file_path):
@@ -49,7 +40,7 @@ if __name__ == '__main__':
     if len(sys.argv) <= 1:
         sys.stderr.write('Provide the file path of a TSV containing similarity data.')
         exit(1)
-    db = setup()
+    db = init_db()
     file_path = os.path.abspath(sys.argv[1])
     result = import_similarities(file_path)
     print('total running time in ms: %d' % (int(time.time() * 1000) - start))
