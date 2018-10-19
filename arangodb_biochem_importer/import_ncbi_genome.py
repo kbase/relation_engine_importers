@@ -1,24 +1,11 @@
-import os
+import hashlib
 from Bio import SeqIO
 
-from init_db import init_db
-from setup_collections import setup_collections
-
-db = init_db()
-
-
-def setup():
-    """Setup the database connection and collections; returns the connection."""
-    vertices = ['organisms', 'taxa', 'genomes', 'genes']
-    edges = ['child_of_taxon', 'genome_has_gene', 'organism_has_genome']
-    setup_collections(db, vertices, edges)
-    return db
+from write_import_file import write_import_file
 
 
 def load_genbank(path):
     """Load a genbank file as a Biopython object."""
-    print('opening genbank file.')
-    print('  size is %d bytes' % os.path.getsize(path))
     with open(path, 'r') as fd:
         try:
             genbank = SeqIO.read(fd, 'genbank')
@@ -27,57 +14,41 @@ def load_genbank(path):
     return genbank
 
 
-def import_organism(genbank):
-    """Import the organism collection."""
-    name = genbank.annotations['organism']
-    print('importing organism named %s' % name)
-    query = "UPSERT @doc INSERT @doc REPLACE @doc IN organisms RETURN NEW"
-    doc = {'name': name}
-    results = db.AQLQuery(query, bindVars={'doc': doc})
-    organism_id = results[0]['_id']
-    print('  upserted organism %s' % organism_id)
-    return organism_id
+def generate_genome_import_files(genbank_path, output_dir):
+    """
+    Generate all import files for a given genbank file path to an output_dir.
+    Will produce CSV files for each collection (filename = collection name)
+    """
+    genbank = load_genbank(genbank_path)
+    write_import_file(generate_taxa(genbank), output_dir)
+    write_import_file(generate_genome(genbank), output_dir)
+    write_import_file(generate_genes(genbank), output_dir)
 
 
-def import_taxonomy(genbank, organism_id):
-    """Import the taxonomy tree."""
-    print('importing taxonomy')
+def generate_taxa(genbank):
+    """Generate taxa-related documents for import."""
+    # Get a list of taxon names
+    organism_name = genbank.annotations['organism']
     annot = genbank.annotations
-    taxa = [t for t in annot['taxonomy']]
-    name_id_dict = {}
-    for t in taxa:
-        doc = {'name': t}
-        query = 'UPSERT @doc INSERT @doc REPLACE @doc IN taxa RETURN NEW'
-        results = db.AQLQuery(query, bindVars={'doc': doc})
-        _id = results[0]['_id']
-        name_id_dict[t] = _id
-        print('  upserted taxon %s' % t)
-    print('importing parent-child edges between all taxa')
-    # Create a list of (parent, child) taxon pairs
-    taxon_pairs = [(taxa[idx], taxa[idx + 1]) for idx in range(len(taxa) - 1)]
-    for (parent, child) in taxon_pairs:
-        # Check if the taxon_has_parent edge already exists
-        child_id = name_id_dict[child]
-        parent_id = name_id_dict[parent]
-        doc = {'_from': child_id, '_to': parent_id}
-        query = 'UPSERT @doc INSERT @doc REPLACE @doc IN child_of_taxon RETURN NEW'
-        results = db.AQLQuery(query, bindVars={'doc': doc})
-        print('  upserted edge from %s to %s' % (child, parent))
-    organism_taxon_id = name_id_dict[taxa[-1]]
-    doc = {'_from': organism_id, '_to': organism_taxon_id}
-    query = 'UPSERT @doc INSERT @doc REPLACE @doc IN child_of_taxon RETURN NEW'
-    results = db.AQLQuery(query, bindVars={'doc': doc})
-    print('  upserted edge between organism and final taxon')
+    taxa_names = [t for t in annot['taxonomy']] + [organism_name]
+    # Generate the keys using a hash function on the name
+    taxa_keys = [hashlib.blake2b(n.encode(), digest_size=16).hexdigest() for n in taxa_names]
+    for (idx, name) in enumerate(taxa_names):
+        vertex = {'_key': taxa_keys[idx], 'name': name}
+        yield ('taxa', vertex)
+        if idx > 0:
+            edge = {'_from': 'taxa/' + taxa_keys[idx], '_to': 'taxa/' + taxa_keys[idx - 1]}
+            yield ('child_of_taxon', edge)
+    # Edge for taxa to genome
+    edge = {'_from': _get_genome_id(genbank), '_to': 'taxa/' + taxa_keys[-1]}
+    yield ('child_of_taxon', edge)
 
 
-def import_genome_document(genbank, organism_id):
+def generate_genome(genbank):
     """
-    Import a single `genome` doc with all the data from the genbank
-    Insert a child_of edge between the genome and organism
+    Generate an import row for the genome with a link to the organism taxon.
     """
-    # Data for matching identical, existing records to update
-    match_data = {'_key': genbank.id}
-    genome_data = {
+    row = {
         '_key': genbank.id,
         'name': genbank.name,
         'description': genbank.description,
@@ -96,30 +67,20 @@ def import_genome_document(genbank, organism_id):
     }
     annot_data = genbank.annotations.get('structured_comment', {}).get('Genome-Annotation-Data', {})
     for (key, val) in annot_data.items():
-        genome_data['annotation_data'][key] = val
-    # Create or update the genome document
-    print('importing genome %s' % genome_data['organism_name'])
-    query = "UPSERT @match INSERT @doc REPLACE @doc IN genomes RETURN NEW"
-    results = db.AQLQuery(query, bindVars={'match': match_data, 'doc': genome_data})
-    genome_id = results[0]['_id']
-    print('  upserted genome ' + genome_id)
-    edge_data = {'_from': organism_id, '_to': genome_id}
-    print('importing genome to organism edge...')
-    query = "UPSERT @doc INSERT @doc REPLACE @doc IN organism_has_genome RETURN NEW"
-    db.AQLQuery(query, bindVars={'doc': edge_data})
-    print('  upserted edge')
-    return genome_id
+        row['annotation_data'][key] = val
+    yield ('genomes', row)
 
 
-def import_genes(genbank, genome_id):
-    """Import gene data from the genbank file."""
-    print('importing %d features from %s' % (len(genbank.features), genome_id))
-    vertices_to_insert = []  # type: list
-    edges_to_insert = []  # type: list
-    for feature in genbank.features:
+def generate_genes(genbank):
+    """
+    Generate gene rows for every feature in a genbank object.
+    """
+    genome_id = _get_genome_id(genbank)
+    for (idx, feature) in enumerate(genbank.features):
         if feature.type == 'source':
+            # Skip the 'source' feature, which describes the entire genome
             continue
-        doc = {
+        row = {
             'location_start': feature.location.start,
             'location_end': feature.location.end,
             'strand': feature.strand,
@@ -128,34 +89,19 @@ def import_genes(genbank, genome_id):
         }
         for (name, val) in feature.qualifiers.items():
             # For some reason, all values under .qualifiers are lists of one elem
-            doc[name] = ', '.join(val)
-        if not doc.get('locus_tag'):
-            # No locus tag; skip this one
+            # We join the elems into a string just in case there are ever multiple items
+            row[name] = ', '.join(val)
+        if not row.get('locus_tag'):
+            # No locus tag; skip this one. We can only use features with locus tags.
             continue
-        doc['_key'] = doc['locus_tag']
-        # Update or insert based on the locus tag
-        vertices_to_insert.append(doc)
-        gene_id = 'genes/' + doc['_key']
-        edges_to_insert.append({
-            '_from': gene_id,
-            '_to': genome_id
-        })
-    genes = db.collections['genes']
-    genome_has_gene = db.collections['genome_has_gene']
-    node_count = genes.bulkSave(vertices_to_insert, onDuplicate='update')
-    edge_count = genome_has_gene.bulkSave(edges_to_insert, onDuplicate='update')
-    print('  upserted %s genes' % node_count)
-    print('  upserted %s genome_has_gene edges' % edge_count)
+        row['_key'] = row['locus_tag']
+        yield ('genes', row)
+        # Generate the edge from gene to genome
+        gene_id = 'genes/%s' % row['_key']
+        edge_key = row['_key'] + ':' + genbank.id
+        edge = {'_from': gene_id, '_to': genome_id, '_key': edge_key}
+        yield ('gene_within_genome', edge)
 
 
-def import_genomes(genbank_dir):
-    """Download all the genome data for a given NCBI ID."""
-    # For every genbank file, create all the vertices and edges
-    for path in os.listdir(genbank_dir):
-        genbank_path = os.path.join(genbank_dir, path)
-        # genbank is a biopython SeqRecord object
-        genbank = load_genbank(genbank_path)
-        organism_id = import_organism(genbank)
-        import_taxonomy(genbank, organism_id)
-        genome_id = import_genome_document(genbank, organism_id)
-        import_genes(genbank, genome_id)
+def _get_genome_id(genbank):
+    return 'genomes/' + genbank.id
