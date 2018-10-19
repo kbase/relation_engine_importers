@@ -1,3 +1,5 @@
 /env/
 /example_data/
 __pycache__
+*.log
+*.pyc
