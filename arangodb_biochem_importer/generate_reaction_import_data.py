@@ -80,7 +80,7 @@ def gen_complexes(complexes, reaction_key):
     yield ('gene_complexes', gene_complex)
     gene_complex_id = 'gene_complexes/' + complex_key
     reaction_id = 'reactions/' + reaction_key
-    reaction_within_complex = {'_from': gene_complex_id, '_to': reaction_id}
+    reaction_within_complex = {'_from': reaction_id, '_to': gene_complex_id}
     yield ('reaction_within_complex', reaction_within_complex)
     # Import gene to complex link
     for comp in complexes:
