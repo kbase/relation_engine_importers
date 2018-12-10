@@ -44,6 +44,12 @@ from write_import_file import write_import_file
 log_file_path = sys.argv[0] + '.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)
 
+_reaction_vert_name = 'rxn_reaction'
+_gene_vert_name = 'rxn_gene'
+_complex_vert_name = 'rxn_gene_complex'
+_reaction_to_complex_edge_name = 'rxn_reaction_within_complex'
+_gene_to_complex_edge_name = 'rxn_gene_within_complex'
+
 
 # Transformations on the header names
 # Eg. given a header "id", save it as a field named "_key" in the db
@@ -64,7 +70,7 @@ def gen_reaction(row, headers):
         reaction[headers[idx]] = col
     if '_key' not in reaction:
         return
-    yield ('reactions', reaction)
+    yield (_reaction_vert_name, reaction)
     parsed_gpr = parse_gpr(reaction['gpr'])
     complexes = remove_unknowns(flatten_expr(parsed_gpr.value))
     if complexes:
@@ -73,21 +79,20 @@ def gen_reaction(row, headers):
 
 
 def gen_complexes(complexes, reaction_key):
-    """Generate docs for gene complex, gene_within_complex, and reaction_within_complex."""
-    complexes_str = str(complexes)
-    complex_key = hashlib.blake2b(complexes_str.encode(), digest_size=16).hexdigest()
-    gene_complex = {'conjunctions': complexes, '_key': complex_key}
-    yield ('gene_complexes', gene_complex)
-    gene_complex_id = 'gene_complexes/' + complex_key
-    reaction_id = 'reactions/' + reaction_key
-    reaction_within_complex = {'_from': reaction_id, '_to': gene_complex_id}
-    yield ('reaction_within_complex', reaction_within_complex)
-    # Import gene to complex link
-    for comp in complexes:
-        for locus_id in comp:
-            gene_id = 'genes/' + locus_id
+    """Generate docs for gene complexes and edges linking genes and reactions to complexes."""
+    for cmplx in complexes:
+        complex_key = hashlib.blake2b(str(cmplx).encode(), digest_size=16).hexdigest()
+        gene_complex = {'genes': cmplx, '_key': complex_key}
+        yield (_complex_vert_name, gene_complex)
+        gene_complex_id = _complex_vert_name + '/' + complex_key
+        reaction_id = _reaction_vert_name + '/' + reaction_key
+        reaction_within_complex = {'_from': reaction_id, '_to': gene_complex_id}
+        yield (_reaction_to_complex_edge_name, reaction_within_complex)
+        # Import gene to complex link
+        for locus_id in cmplx:
+            gene_id = _gene_vert_name + '/' + locus_id
             gene_within_complex = {'_from': gene_id, '_to': gene_complex_id}
-            yield ('gene_within_complex', gene_within_complex)
+            yield (_gene_to_complex_edge_name, gene_within_complex)
 
 
 def iterate_tsv_rows(file_path):
