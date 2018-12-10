@@ -20,6 +20,10 @@ from import_ncbi_genome import generate_genome_import_files
 log_file_path = 'import_all_ncbi_genomes_in_directory.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)
 
+_genome_vert_name = 'rxn_genome'
+_gene_vert_name = 'rxn_gene'
+_gene_to_genome_edge_name = 'rxn_gene_within_genome'
+
 
 def iterate_dirs(input_dir, output_dir):
     """
@@ -36,7 +40,11 @@ def iterate_dirs(input_dir, output_dir):
 
 
 def iterate_genbanks(dir_path):
-    """Iterate and generate import data for all genbank files within a directory."""
+    """
+    Iterate and generate import data for all genbank files within a directory.
+    For each genome, we yield one row in output_dir/rxn_genome.json
+    And we create a gene import like output_dir/genome_id/rxn_gene.json
+    """
     for file_name in os.listdir(dir_path):
         full_path = os.path.join(dir_path, file_name)
         try:
@@ -68,7 +76,7 @@ if __name__ == '__main__':
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
     check_dir(input_dir)
-    check_dir(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
     print('logging to %s' % log_file_path)
     start = int(time.time() * 1000)
     logging.info('starting run at %s' % start)

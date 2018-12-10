@@ -151,7 +151,7 @@ if __name__ == '__main__':
         sys.exit(1)
     output_dir = sys.argv[2]
     if not os.path.isdir(output_dir):
-        print('%s does not exist, creating..')
+        print('%s does not exist, creating..' % output_dir)
         os.mkdir(output_dir)
     print('logging to %s' % log_file_path)
     iterate_reaction_dir(input_dir, output_dir)

@@ -1,7 +1,11 @@
-import hashlib
+import os
 from Bio import SeqIO
 
 from write_import_file import write_import_file
+
+_genome_vert_name = 'rxn_genome'
+_gene_vert_name = 'rxn_gene'
+_gene_edge_name = 'rxn_gene_within_genome'
 
 
 def load_genbank(path):
@@ -20,28 +24,12 @@ def generate_genome_import_files(genbank_path, output_dir):
     Will produce CSV files for each collection (filename = collection name)
     """
     genbank = load_genbank(genbank_path)
-    write_import_file(generate_taxa(genbank), output_dir)
-    write_import_file(generate_genome(genbank), output_dir)
-    write_import_file(generate_genes(genbank), output_dir)
-
-
-def generate_taxa(genbank):
-    """Generate taxa-related documents for import."""
-    # Get a list of taxon names
-    organism_name = genbank.annotations['organism']
-    annot = genbank.annotations
-    taxa_names = [t for t in annot['taxonomy']] + [organism_name]
-    # Generate the keys using a hash function on the name
-    taxa_keys = [hashlib.blake2b(n.encode(), digest_size=16).hexdigest() for n in taxa_names]
-    for (idx, name) in enumerate(taxa_names):
-        vertex = {'_key': taxa_keys[idx], 'name': name}
-        yield ('taxa', vertex)
-        if idx > 0:
-            edge = {'_from': 'taxa/' + taxa_keys[idx], '_to': 'taxa/' + taxa_keys[idx - 1]}
-            yield ('child_of_taxon', edge)
-    # Edge for taxa to genome
-    edge = {'_from': _get_genome_id(genbank), '_to': 'taxa/' + taxa_keys[-1]}
-    yield ('child_of_taxon', edge)
+    genome_path = os.path.join(output_dir, _genome_vert_name + '.json')
+    write_import_file(generate_genome(genbank), genome_path)
+    gene_path = os.path.join(output_dir, genbank.id, _gene_vert_name + '.json')
+    write_import_file(generate_genes(genbank), gene_path)
+    gene_edge_path = os.path.join(output_dir, genbank.id, _gene_edge_name + '.json')
+    write_import_file(generate_gene_edges(genbank), gene_edge_path)
 
 
 def generate_genome(genbank):
@@ -68,17 +56,16 @@ def generate_genome(genbank):
     annot_data = genbank.annotations.get('structured_comment', {}).get('Genome-Annotation-Data', {})
     for (key, val) in annot_data.items():
         row['annotation_data'][key] = val
-    yield ('genomes', row)
+    yield row
 
 
 def generate_genes(genbank):
     """
     Generate gene rows for every feature in a genbank object.
     """
-    genome_id = _get_genome_id(genbank)
     for (idx, feature) in enumerate(genbank.features):
+        # Skip the 'source' feature, which describes the entire genome
         if feature.type == 'source':
-            # Skip the 'source' feature, which describes the entire genome
             continue
         row = {
             'location_start': feature.location.start,
@@ -95,13 +82,19 @@ def generate_genes(genbank):
             # No locus tag; skip this one. We can only use features with locus tags.
             continue
         row['_key'] = row['locus_tag']
-        yield ('genes', row)
+        yield row
+
+
+def generate_gene_edges(genbank):
+    """Generate gene-to-genome edges for every feature in a genbank object."""
+    genome_key = genbank.id
+    genome_id = _genome_vert_name + '/' + genome_key
+    for (idx, feature) in enumerate(genbank.features):
+        # Skip the 'source' feature, which describes the entire genome
+        if feature.type == 'source' or 'locus_tag' not in feature.qualifiers:
+            continue
         # Generate the edge from gene to genome
-        gene_id = 'genes/%s' % row['_key']
-        edge_key = row['_key'] + ':' + genbank.id
-        edge = {'_from': gene_id, '_to': genome_id, '_key': edge_key}
-        yield ('gene_within_genome', edge)
-
-
-def _get_genome_id(genbank):
-    return 'genomes/' + genbank.id
+        gene_key = feature.qualifiers['locus_tag'][0]
+        gene_id = _gene_vert_name + '/' + gene_key
+        edge_key = gene_key + '-' + genome_key
+        yield {'_from': gene_id, '_to': genome_id, '_key': edge_key}
