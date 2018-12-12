@@ -22,6 +22,7 @@ def bulk_save_post(file_path, col_name):
     query_params = {
         'type': 'documents',
         'collection': col_name,
+        'overwrite': 'yes',
         'onDuplicate': 'replace'
     }
     db_url = os.environ.get('DB_URL', 'http://localhost:8529')
