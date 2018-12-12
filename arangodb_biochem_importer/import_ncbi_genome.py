@@ -1,5 +1,6 @@
 import os
 from Bio import SeqIO
+from Bio.SeqFeature import SeqFeature
 
 from write_import_file import write_import_file
 
@@ -64,8 +65,7 @@ def generate_genes(genbank):
     Generate gene rows for every feature in a genbank object.
     """
     for (idx, feature) in enumerate(genbank.features):
-        # Skip the 'source' feature, which describes the entire genome
-        if feature.type == 'source':
+        if feature.type == 'source' or feature.type == 'gene':
             continue
         row = {
             'location_start': feature.location.start,
@@ -82,6 +82,11 @@ def generate_genes(genbank):
             # No locus tag; skip this one. We can only use features with locus tags.
             continue
         row['_key'] = row['locus_tag']
+        # Generate the DNA sequence using biopython
+        # https://biopython.org/DIST/docs/api/Bio.SeqFeature.SeqFeature-class.html#extract
+        seq_obj = SeqFeature(feature.location, feature.type)  # type: SeqFeature
+        seq_str = str(seq_obj.extract(genbank.seq))
+        row['sequence'] = seq_str
         yield row
 
 
