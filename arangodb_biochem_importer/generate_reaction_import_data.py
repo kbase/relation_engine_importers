@@ -45,7 +45,7 @@ log_file_path = sys.argv[0] + '.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)
 
 _reaction_vert_name = 'rxn_reaction'
-_gene_vert_name = 'rxn_gene'
+_gene_vert_name = 'ncbi_gene'
 _complex_vert_name = 'rxn_gene_complex'
 _reaction_to_complex_edge_name = 'rxn_reaction_within_complex'
 _gene_to_complex_edge_name = 'rxn_gene_within_complex'
