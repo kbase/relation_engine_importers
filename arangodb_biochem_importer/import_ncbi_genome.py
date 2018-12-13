@@ -4,9 +4,9 @@ from Bio.SeqFeature import SeqFeature
 
 from write_import_file import write_import_file
 
-_genome_vert_name = 'rxn_genome'
-_gene_vert_name = 'rxn_gene'
-_gene_edge_name = 'rxn_gene_within_genome'
+_genome_vert_name = 'ncbi_genome'
+_gene_vert_name = 'ncbi_gene'
+_gene_edge_name = 'ncbi_gene_within_genome'
 
 
 def load_genbank(path):
