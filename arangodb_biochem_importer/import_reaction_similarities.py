@@ -3,7 +3,7 @@ import sys
 import os
 import csv
 
-from init_db import init_db
+from utils.init_db import init_db
 
 _similar_edge_name = 'rxn_similar_to_reaction'
 _reaction_vert_name = 'rxn_reaction'

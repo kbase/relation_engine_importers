@@ -15,7 +15,7 @@ import sys
 import os
 import time
 
-from import_ncbi_genome import generate_genome_import_files
+from generate_genome_helpers import generate_genome_import_files
 
 log_file_path = 'import_all_ncbi_genomes_in_directory.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)

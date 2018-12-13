@@ -2,7 +2,7 @@ import os
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature
 
-from write_import_file import write_import_file
+from utils.write_import_file import write_import_file
 
 _genome_vert_name = 'ncbi_genome'
 _gene_vert_name = 'ncbi_gene'

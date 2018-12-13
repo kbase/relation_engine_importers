@@ -37,9 +37,9 @@ import csv
 import hashlib
 import logging
 
-from parse_gpr import parse_gpr
-from flatten_boolean_expr import flatten_expr, remove_unknowns
-from write_import_file import write_import_file
+from utils.parse_gpr import parse_gpr
+from utils.flatten_boolean_expr import flatten_expr
+from utils.write_import_file import write_multiple_import_files
 
 log_file_path = sys.argv[0] + '.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)
@@ -63,33 +63,33 @@ header_transforms = {
 }
 
 
-def gen_reaction(row, headers):
+def gen_complex_data(row, headers):
     """Import a single reaction from a row in a TSV file."""
     reaction = {}  # type: dict
     for (idx, col) in enumerate(row):
         reaction[headers[idx]] = col
     if '_key' not in reaction:
         return
-    yield (_reaction_vert_name, reaction)
     parsed_gpr = parse_gpr(reaction['gpr'])
-    complexes = remove_unknowns(flatten_expr(parsed_gpr.value))
-    if complexes:
-        for result in gen_complexes(complexes, reaction['_key']):
-            yield result
-
-
-def gen_complexes(complexes, reaction_key):
-    """Generate docs for gene complexes and edges linking genes and reactions to complexes."""
+    complexes = flatten_expr(parsed_gpr.value)
+    if not complexes:
+        return
     for cmplx in complexes:
+        cmplx.sort()
+        gene_count = len([x for x in cmplx if x != 'Unknown'])
+        if gene_count == 0:
+            continue
         complex_key = hashlib.blake2b(str(cmplx).encode(), digest_size=16).hexdigest()
         gene_complex = {'genes': cmplx, '_key': complex_key}
         yield (_complex_vert_name, gene_complex)
         gene_complex_id = _complex_vert_name + '/' + complex_key
-        reaction_id = _reaction_vert_name + '/' + reaction_key
+        reaction_id = _reaction_vert_name + '/' + reaction['_key']
         reaction_within_complex = {'_from': reaction_id, '_to': gene_complex_id}
         yield (_reaction_to_complex_edge_name, reaction_within_complex)
         # Import gene to complex link
         for locus_id in cmplx:
+            if locus_id == 'Unknown':
+                continue
             gene_id = _gene_vert_name + '/' + locus_id
             gene_within_complex = {'_from': gene_id, '_to': gene_complex_id}
             yield (_gene_to_complex_edge_name, gene_within_complex)
@@ -109,7 +109,7 @@ def iterate_tsv_rows(file_path):
         reader = csv.reader(csv_fd, delimiter='\t', quotechar='"')
         headers = [header_transforms.get(h, h) for h in next(reader)]
         for row in reader:
-            reaction_gen = gen_reaction(row, headers)
+            reaction_gen = gen_complex_data(row, headers)
             for result in reaction_gen:
                 yield result
 
@@ -127,7 +127,14 @@ def iterate_reaction_dir(input_dir, output_dir):
     # Generate:
     # reactions, gene_complexes, reaction_within_complex, gene_within_complex
     for file_path in get_reaction_files(input_dir):
-        write_import_file(iterate_tsv_rows(file_path), output_dir)
+        # Writes out dir/rxn_gene_complex.json
+        # Writes out dir/rxn_gene_within_complex.json
+        # Writes out dir/rxn_reaction_within_complex.json
+        write_multiple_import_files(iterate_tsv_rows(file_path), {
+            _gene_to_complex_edge_name: os.path.join(output_dir, _gene_to_complex_edge_name + '.json'),
+            _reaction_to_complex_edge_name: os.path.join(output_dir, _reaction_to_complex_edge_name + '.json'),
+            _complex_vert_name: os.path.join(output_dir, _complex_vert_name + '.json'),
+        })
 
 
 if __name__ == '__main__':

@@ -13,7 +13,8 @@ import os
 import re
 import csv
 
-from init_db import init_db
+from utils.init_db import init_db
+# TODO this module does not exist any longer
 from setup_collections import setup_collections
 
 

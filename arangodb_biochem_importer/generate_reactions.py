@@ -9,7 +9,7 @@ import os
 import sys
 import csv
 
-from write_import_file import write_import_file
+from utils.write_import_file import write_import_file
 
 _reaction_vert_name = "rxn_reaction"
 
