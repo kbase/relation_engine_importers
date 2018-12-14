@@ -86,7 +86,7 @@ def generate_genes(genbank):
         # https://biopython.org/DIST/docs/api/Bio.SeqFeature.SeqFeature-class.html#extract
         seq_obj = SeqFeature(feature.location, feature.type)  # type: SeqFeature
         seq_str = str(seq_obj.extract(genbank.seq))
-        row['sequence'] = seq_str
+        row['dna_sequence'] = seq_str
         yield row
 
 
