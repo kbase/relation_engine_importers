@@ -34,3 +34,7 @@ https://github.com/kbaseapps/BiochemistryAPI/tree/master/data
     bash-3.2$ source ~/anaconda3/bin/activate my-rdkit-env
     (my-rdkit-env) bash-3.2$
 
+5) create the reaction similarity matrix
+
+     $ ./pass6.py  >p6_pairs.all
+
