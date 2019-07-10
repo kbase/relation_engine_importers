@@ -1,5 +1,3 @@
-
-
 Generating (Regenerating) reaction similary and gene model ArangoDB
 
 (startng from https://kbase-jira.atlassian.net/browse/SCT-1375)
@@ -37,4 +35,3 @@ https://github.com/kbaseapps/BiochemistryAPI/tree/master/data
 5) create the reaction similarity matrix
 
      $ ./pass6.py  >p6_pairs.all
-

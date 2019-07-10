@@ -1,4 +1,0 @@
-flake8==3.5.0
-pyflakes==2.0.0
-bandit==1.5.1
-mypy==0.630
