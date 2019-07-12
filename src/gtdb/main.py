@@ -4,13 +4,13 @@ import sys
 
 
 _TAXA_TYPES = {
-    'd': 'Domain',
-    'p': 'Phylum',
-    'c': 'Class',
-    'o': 'Order',
-    'f': 'Family',
-    'g': 'Genus',
-    's': 'Species',
+    'd': 'domain',
+    'p': 'phylum',
+    'c': 'class',
+    'o': 'order',
+    'f': 'family',
+    'g': 'genus',
+    's': 'species',
 }
 
 # Graph schema looks like:
@@ -24,11 +24,11 @@ _TAXA_TYPES = {
 
 
 def bac_taxonomy_to_json():
-    path = 'data_raw/bacteria/bac_taxonomy_r86.tsv'
+    path = 'bac120_taxonomy_r89.tsv'
     timestamp = str(int(time.time() * 1000))
-    gtdb_taxon_path = f'data_processed/bacteria/gtdb_taxon-{timestamp}.json'
-    gtdb_organism_path = f'data_processed/bacteria/gtdb_organism-{timestamp}.json'
-    gtdb_child_of_taxon_path = f'data_processed/bacteria/gtdb_child_of_taxon-{timestamp}.json'
+    gtdb_taxon_path = f'gtdb_taxon-{timestamp}.json'
+    gtdb_organism_path = f'gtdb_organism-{timestamp}.json'
+    gtdb_child_of_taxon_path = f'gtdb_child_of_taxon-{timestamp}.json'
     gtdb_taxon_output = open(gtdb_taxon_path, 'a')
     gtdb_organism_output = open(gtdb_organism_path, 'a')
     gtdb_child_of_taxon_output = open(gtdb_child_of_taxon_path, 'a')
@@ -50,16 +50,25 @@ def bac_taxonomy_to_json():
             for taxon in lineage.split(';'):
                 (short_type, name) = taxon.split('__')
                 type_name = _TAXA_TYPES[short_type]
-                name = name.strip('\n')
+                name = name.strip('\n').lower()
+                if type_name == 'species': 
+                    name = name.split(" ")
                 if name:
                     taxa.append((short_type, type_name, name))
-            for (short_type, type_name, name) in taxa:
+            for (idx, (short_type, type_name, name)) in enumerate(taxa):
                 # Write the gtdb_taxon document
-                full_name = short_type + ':' + name
+                if type_name == 'species': 
+                    full_name = short_type + ':' + str(" ".join(name))
+                else: 
+                    full_name = short_type + ':' + name
                 if full_name in found_taxon_names:
                     # We have already recorded this taxon
                     continue
-                taxon_doc = {'_key': full_name, 'type': type_name, 'name': name}
+                taxon_doc = {'_key': full_name, 'type': type_name, 'name': name
+                            }
+                for idx2 in range(0, idx+1):
+                    (short_type, type_name, name) = taxa[idx2]
+                    taxon_doc[type_name] = name
                 gtdb_taxon_output.write(json.dumps(taxon_doc) + '\n')
                 if prev_taxon_key:
                     # Write the edge to go from child to parent
@@ -74,7 +83,7 @@ def bac_taxonomy_to_json():
             # Write the edge to go from child to parent from the refseq entry to the species
             child_doc = {
                 '_from': accession,
-                '_to': taxa[-1][0] + ':' + taxa[-1][2]
+                '_to': taxa[-1][0] + ':' + str(" ".join(taxa[-1][2]))
             }
             gtdb_child_of_taxon_output.write(json.dumps(child_doc) + '\n')
     finally:
