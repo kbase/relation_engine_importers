@@ -54,22 +54,27 @@ def bac_taxonomy_to_json():
                 name = name.strip('\n').lower()
                 if type_name == 'species': 
                     name = name.split(" ")
+                else: 
+                    name = [name]
                 if name:
                     taxa.append((short_type, type_name, name))
             for (idx, (short_type, type_name, name)) in enumerate(taxa):
                 # Write the gtdb_taxon document
                 if type_name == 'species': 
-                    full_name = short_type + ':' + str(" ".join(name))
+                    full_name = short_type + ':' + str("_".join(name))
                 else: 
-                    full_name = short_type + ':' + name
+                    full_name = short_type + ':' + name[0]
                 if full_name in found_taxon_names:
                     # We have already recorded this taxon
                     continue
-                taxon_doc = {'_key': full_name, 'release': release, 'type': type_name, 'name': name
+                taxon_doc = {'_key': full_name, 'release': release, 'rank': type_name, 'name': name
                             }
                 for idx2 in range(0, idx+1):
                     (short_type, type_name, name) = taxa[idx2]
-                    taxon_doc[type_name] = name
+                    if type_name == 'species':
+                        taxon_doc[type_name] = str("_".join(name))
+                    else:
+                        taxon_doc[type_name] = name[0]
                 gtdb_taxon_output.write(json.dumps(taxon_doc) + '\n')
                 if prev_taxon_key:
                     # Write the edge to go from child to parent
@@ -105,3 +110,4 @@ if __name__ == '__main__':
         sys.exit(1)
     commands[option]()
     print('-- done --')
+    
