@@ -75,8 +75,9 @@ def bac_taxonomy_to_json(tsv_path):
                 if prev_taxon_key:
                     # Write the edge to go from child to parent
                     # _from is child and _to is parent
+                    print(full_name)
                     child_doc = {
-                        '_from': full_name,
+                        '_fråom': full_name,
                         '_to': prev_taxon_key
                     }
                     gtdb_edges_output.write(json.dumps(child_doc) + '\n')
@@ -85,7 +86,7 @@ def bac_taxonomy_to_json(tsv_path):
             # Write the edge to go from child to parent from the refseq entry to the species
             edge_doc = {
                 '_from': accession,
-                '_to': taxa[-1][0] + ':' + str(" ".join(taxa[-1][2]))
+                '_to': taxa[-1][0] + ':' + str("_".join(taxa[-1][2]))
             }
             gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
     finally:
