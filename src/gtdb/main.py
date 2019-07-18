@@ -27,8 +27,8 @@ def bac_taxonomy_to_json(tsv_path):
     path = tsv_path
     release = path.strip('.tsv')
     timestamp = str(int(time.time() * 1000))
-    gtdb_vertices_path = f'gtdb_vertices-{timestamp}.json'
-    gtdb_edges_path = f'gtdb_edges-{timestamp}.json'
+    gtdb_vertices_path = f'gtdb_taxon.json'
+    gtdb_edges_path = f'gtdb_child_of_taxon.json'
     gtdb_vertices_output = open(gtdb_vertices_path, 'a')
     gtdb_edges_output = open(gtdb_edges_path, 'a')
     # Raw data input
@@ -68,27 +68,43 @@ def bac_taxonomy_to_json(tsv_path):
                 for idx2 in range(0, idx+1):
                     (taxon_type_abbrev, taxa_type, taxa_name) = taxa[idx2]
                     if taxa_type == 'species':
-                        vertex_doc[taxa_type] = str("_".join(taxa_name))
+                        vertex_doc[taxa_type] = str("_".join(taxa_name))  
                     else:
                         vertex_doc[taxa_type] = taxa_name[0]
                 gtdb_vertices_output.write(json.dumps(vertex_doc) + '\n')
+                if prev_taxon_key == None: 
+                    prev_root_key = full_name
+                    if prev_root_key:
+                        edge_doc = {
+                            '_from': full_name,
+                            '_to': prev_root_key
+                        }
+                        gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
                 if prev_taxon_key:
                     # Write the edge to go from child to parent
                     # _from is child and _to is parent
-                    print(full_name)
                     edge_doc = {
-                        '_from': full_name,
-                        '_to': prev_taxon_key
+                        '_from': "gtdb_taxon/" + full_name,
+                        'child_type': 't',
+                        '_to': "gtdb_taxon/" + prev_taxon_key
                     }
                     gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
                 prev_taxon_key = full_name
                 found_taxon_names[full_name] = True
             # Write the edge to go from child to parent from the refseq entry to the species
             edge_doc = {
-                '_from': accession,
-                '_to': taxa[-1][0] + ':' + str("_".join(taxa[-1][2]))
+                '_from': "gtdb_taxon/"+accession,
+                'child_type': 'o',
+                '_to': "gtdb_taxon/"+taxa[-1][0] + ':' + str("_".join(taxa[-1][2]))
+            }
+            vertex_doc = {
+                '_key':accession, 
+                'release': release, 
+                'rank': 'genome',
+                'name': taxa_name
             }
             gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
+            gtdb_vertices_output.write(json.dumps(vertex_doc) + '\n')
     finally:
         for fd in to_close:
             fd.close()
