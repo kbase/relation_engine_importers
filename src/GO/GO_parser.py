@@ -11,9 +11,9 @@ def write_relationship_edges(relationship_edges):
     for edge in list_of_edges:
         if edge[2] != 'is_a':
             edge_dict = {}
-            edge_dict['id'] = str(edge[0] + "__" + edge[1] + "__" +edge[2])
-            edge_dict['from'] = edge[0]
-            edge_dict['to'] = edge[1]
+            edge_dict['_key'] = str(edge[0] + "__" + edge[1] + "__" +edge[2])
+            edge_dict['_from'] = edge[0]
+            edge_dict['_to'] = edge[1]
             edge_dict['relationship_type'] = edge[2]
             relationship_edges.write(json.dumps(edge_dict) + "\n")
             
@@ -21,9 +21,9 @@ def write_isa_edges(isa_edges):
     for edge in list_of_edges:
         if edge[2] == 'is_a':
             edge_dict = {}
-            edge_dict['id'] = str(edge[0] + "__" + edge[1] + "__is_a")
-            edge_dict['from'] = edge[0]
-            edge_dict['to'] = edge[1]
+            edge_dict['_key'] = str(edge[0] + "__" + edge[1] + "__is_a")
+            edge_dict['_from'] = edge[0]
+            edge_dict['_to'] = edge[1]
             isa_edges.write(json.dumps(edge_dict) + "\n")
     
 def write_intersection_edges(intersection_edges):
@@ -34,14 +34,14 @@ def write_intersection_edges(intersection_edges):
                 edge_dict = {}
                 intersection_term = val.split(" ")
                 if len(intersection_term) == 1:
-                    edge_dict['id'] = str(curr_node + "__" + intersection_term[0] + "__")
-                    edge_dict["from"] = curr_node
-                    edge_dict["to"] = intersection_term[0]
+                    edge_dict['_key'] = str(curr_node + "__" + intersection_term[0] + "__")
+                    edge_dict["_from"] = curr_node
+                    edge_dict["_to"] = intersection_term[0]
                     edge_dict["intersection_type"] = ""
                 else:
-                    edge_dict['id'] = str(curr_node + "__" + intersection_term[1] + "__" + intersection_term[0])
-                    edge_dict["from"] = curr_node
-                    edge_dict["to"] = intersection_term[1]
+                    edge_dict['_key'] = str(curr_node + "__" + intersection_term[1] + "__" + intersection_term[0])
+                    edge_dict["_from"] = curr_node
+                    edge_dict["_to"] = intersection_term[1]
                     edge_dict["intersection_type"] = intersection_term[0]
                 intersection_edges.write(json.dumps(edge_dict) + "\n")
                 
@@ -51,15 +51,15 @@ def write_disjoint_edges(disjoint_edges):
         if 'disjoint_from' in graph.node[curr_node]:
             edge_dict = {}
             for val in graph.node[curr_node]['disjoint_from']:
-                edge_dict['id'] = str(curr_node + "__" + val)
-                edge_dict["from"] = curr_node
-                edge_dict["to"] = val
+                edge_dict['_key'] = str(curr_node + "__" + val)
+                edge_dict["_from"] = curr_node
+                edge_dict["_to"] = val
                 disjoint_edges.write(json.dumps(edge_dict) + "\n")
                                      
 def write_terms(nodes_output):
     for i in range(len(list_of_nodes)):
         node_dict = {}
-        node_dict['id'] = list_of_nodes[i]
+        node_dict['_key'] = list_of_nodes[i]
         node_dict['name'] = graph.node[list_of_nodes[i]]['name']
         node_dict['namespace'] = graph.node[list_of_nodes[i]]['namespace']
         if 'alt_id' in graph.node[list_of_nodes[i]]:
@@ -78,11 +78,11 @@ def write_terms(nodes_output):
             node_dict['creation_date'] = graph.node[list_of_nodes[i]]['creation_date']
         nodes_output.write(json.dumps(node_dict) + "\n")
 
-relationship_edges_path = 'GO_relationship_edges.json'
-isa_edges_path = 'GO_isa_edges.json'
-intersection_edges_path = 'GO_intersection_edges.json'
-disjoint_edges_path = 'GO_disjoint_edges.json'
-nodes_path = "GO_terms.json"
+relationship_edges_path = 'GO_test_edges_relationship.json'
+isa_edges_path = 'GO_test_edges_isa.json'
+intersection_edges_path = 'GO_test_edges_intersection_of.json'
+disjoint_edges_path = 'GO_test_edges_disjoint_from.json'
+nodes_path = "GO_test_term.json"
 
 relationship_edges = open(relationship_edges_path, 'w')
 isa_edges = open(isa_edges_path, 'w')
