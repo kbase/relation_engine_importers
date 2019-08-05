@@ -1,3 +1,12 @@
+import networkx
+import obonet
+import json 
+url = 'http://purl.obolibrary.org/obo/go.obo'
+graph = obonet.read_obo(url)
+
+list_of_edges = list(graph.edges)
+list_of_nodes = list(graph.node)
+
 def write_relationship_edges(relationship_edges):
     for edge in list_of_edges:
         if edge[2] == 'is_a':
