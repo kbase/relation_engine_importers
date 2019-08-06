@@ -25,7 +25,8 @@ def bulk_save_post(file_path, col_name):
         resp = requests.put(
             re_api_url + '/api/v1/documents',
             params={'collection': col_name, 'overwrite': True},
-            data=fd
+            data=fd, 
+            headers={'authorization':re_token}
         )
     if not resp.ok:
         raise RuntimeError(resp.text)
