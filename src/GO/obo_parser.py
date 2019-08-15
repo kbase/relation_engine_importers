@@ -1,4 +1,4 @@
-# This file was editted from https://github.com/dhimmel/obonet
+# This file was adapted from https://github.com/dhimmel/obonet
 import itertools
 import re
 import networkx
