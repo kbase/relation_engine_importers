@@ -4,13 +4,13 @@ import sys
 
 
 _TAXA_TYPES = {
-    'd': 'Domain',
-    'p': 'Phylum',
-    'c': 'Class',
-    'o': 'Order',
-    'f': 'Family',
-    'g': 'Genus',
-    's': 'Species',
+    'd': 'domain',
+    'p': 'phylum',
+    'c': 'class',
+    'o': 'order',
+    'f': 'family',
+    'g': 'genus',
+    's': 'species',
 }
 
 # Graph schema looks like:
@@ -23,19 +23,18 @@ _TAXA_TYPES = {
 #   - gtdb_organism -> gtdb_taxon
 
 
-def bac_taxonomy_to_json():
-    path = 'data_raw/bacteria/bac_taxonomy_r86.tsv'
+def bac_taxonomy_to_json(tsv_path):
+    path = tsv_path
+    release = path.strip('.tsv')
     timestamp = str(int(time.time() * 1000))
-    gtdb_taxon_path = f'data_processed/bacteria/gtdb_taxon-{timestamp}.json'
-    gtdb_organism_path = f'data_processed/bacteria/gtdb_organism-{timestamp}.json'
-    gtdb_child_of_taxon_path = f'data_processed/bacteria/gtdb_child_of_taxon-{timestamp}.json'
-    gtdb_taxon_output = open(gtdb_taxon_path, 'a')
-    gtdb_organism_output = open(gtdb_organism_path, 'a')
-    gtdb_child_of_taxon_output = open(gtdb_child_of_taxon_path, 'a')
+    gtdb_vertices_path = f'gtdb_taxon.json'
+    gtdb_edges_path = f'gtdb_child_of_taxon.json'
+    gtdb_vertices_output = open(gtdb_vertices_path, 'a')
+    gtdb_edges_output = open(gtdb_edges_path, 'a')
     # Raw data input
     input_file = open(path)
     # All the file descriptors we will need to close at the end
-    to_close = [gtdb_taxon_output, gtdb_organism_output, gtdb_child_of_taxon_output, input_file]
+    to_close = [gtdb_vertices_output, gtdb_edges_output, input_file]
     # For tracking taxon names we have already found
     found_taxon_names = {}  # type: dict
     try:
@@ -43,40 +42,69 @@ def bac_taxonomy_to_json():
             (accession, lineage) = line.split('\t')
             # Write the gtdb_organism doc
             refseq_doc = {'_key': accession}
-            gtdb_organism_output.write(json.dumps(refseq_doc) + '\n')
             prev_taxon_key = None
             # Iterate over taxa
             taxa = []  # type: list
             for taxon in lineage.split(';'):
-                (short_type, name) = taxon.split('__')
-                type_name = _TAXA_TYPES[short_type]
-                name = name.strip('\n')
-                if name:
-                    taxa.append((short_type, type_name, name))
-            for (short_type, type_name, name) in taxa:
+                (taxon_type_abbrev, taxa_name) = taxon.split('__')
+                taxa_type = _TAXA_TYPES[taxon_type_abbrev]
+                taxa_name = taxa_name.strip('\n').lower()
+                if taxa_type == 'species': 
+                    taxa_name = taxa_name.split(" ")
+                else: 
+                    taxa_name = [taxa_name]
+                taxa.append((taxon_type_abbrev, taxa_type, taxa_name))
+            for (idx, (taxon_type_abbrev, taxa_type, taxa_name)) in enumerate(taxa):
                 # Write the gtdb_taxon document
-                full_name = short_type + ':' + name
+                if taxa_type == 'species': 
+                    full_name = taxon_type_abbrev + ':' + str("_".join(taxa_name))
+                else: 
+                    full_name = taxon_type_abbrev + ':' + taxa_name[0]
                 if full_name in found_taxon_names:
                     # We have already recorded this taxon
                     continue
-                taxon_doc = {'_key': full_name, 'type': type_name, 'name': name}
-                gtdb_taxon_output.write(json.dumps(taxon_doc) + '\n')
+                vertex_doc = {'_key': full_name, 'release': release, 'rank': taxa_type, 'name': taxa_name
+                            }
+                for idx2 in range(0, idx+1):
+                    (taxon_type_abbrev, taxa_type, taxa_name) = taxa[idx2]
+                    if taxa_type == 'species':
+                        vertex_doc[taxa_type] = str("_".join(taxa_name))  
+                    else:
+                        vertex_doc[taxa_type] = taxa_name[0]
+                gtdb_vertices_output.write(json.dumps(vertex_doc) + '\n')
+                if prev_taxon_key == None: 
+                    prev_root_key = full_name
+                    if prev_root_key:
+                        edge_doc = {
+                            '_from': full_name,
+                            '_to': prev_root_key
+                        }
+                        gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
                 if prev_taxon_key:
                     # Write the edge to go from child to parent
                     # _from is child and _to is parent
-                    child_doc = {
-                        '_from': full_name,
-                        '_to': prev_taxon_key
+                    edge_doc = {
+                        '_from': "gtdb_taxon/" + full_name,
+                        'child_type': 't',
+                        '_to': "gtdb_taxon/" + prev_taxon_key
                     }
-                    gtdb_child_of_taxon_output.write(json.dumps(child_doc) + '\n')
+                    gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
                 prev_taxon_key = full_name
                 found_taxon_names[full_name] = True
             # Write the edge to go from child to parent from the refseq entry to the species
-            child_doc = {
-                '_from': accession,
-                '_to': taxa[-1][0] + ':' + taxa[-1][2]
+            edge_doc = {
+                '_from': "gtdb_taxon/"+accession,
+                'child_type': 'o',
+                '_to': "gtdb_taxon/"+taxa[-1][0] + ':' + str("_".join(taxa[-1][2]))
             }
-            gtdb_child_of_taxon_output.write(json.dumps(child_doc) + '\n')
+            vertex_doc = {
+                '_key':accession, 
+                'release': release, 
+                'rank': 'genome',
+                'name': taxa_name
+            }
+            gtdb_edges_output.write(json.dumps(edge_doc) + '\n')
+            gtdb_vertices_output.write(json.dumps(vertex_doc) + '\n')
     finally:
         for fd in to_close:
             fd.close()
