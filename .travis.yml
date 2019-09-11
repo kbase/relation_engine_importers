@@ -3,9 +3,12 @@ language: python
 python: "3.7"
 
 install:
-  - pip install pipenv
+  - pip install pipenv coverage pytest-coverage python-coveralls flake8
   - pipenv install
  
 script:
+  - flake8 src
+  - export PYTHONPATH=$(pwd)/src; pytest --verbose src --cov src
 
-  - export PYTHONPATH=$(pwd)/src; pytest
+after_success:
+  - coveralls
