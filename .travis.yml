@@ -8,5 +8,4 @@ install:
  
 script:
 
-  - pipenv shell
   - export PYTHONPATH=$(pwd)/src; pytest
