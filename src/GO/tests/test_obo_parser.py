@@ -6,14 +6,17 @@ import os
 import sys
 import json
 sys.path.append('../')
-import obo_parser
+from GO import obo_parser
+
+def get_file_dir():
+    return os.path.dirname(__file__)
 
 class TestOboParser(unittest.TestCase):
     def test_read_GO_obo_file(self):
         """
         Test reading the GO ontology OBO file.
         """
-        path = os.path.join(os.getcwd(), 'data', 'go.obo')
+        path = os.path.join(get_file_dir(), 'data', 'go.obo')
         with open(path, 'rt') as read_file: 
             go = obo_parser.read_obo(read_file)
             self.assertEqual(len(go), 47401)
@@ -27,7 +30,7 @@ class TestOboParser(unittest.TestCase):
         """
         Test reading obsolete terms in the GO ontology OBO file.
         """
-        path = os.path.join(os.getcwd(), 'data', 'go.obo')
+        path = os.path.join(get_file_dir(), 'data', 'go.obo')
         with open(path, 'rt') as read_file: 
             go = obo_parser.read_obo(read_file)
             self.assertEqual(go.node["GO:0000020"]["is_obsolete"], "true")
