@@ -3,7 +3,7 @@ language: python
 python: "3.7"
 
 install:
-  - pip install pipenv coverage pytest-coverage python-coveralls flake8
+  - pip install pipenv coverage python-coveralls flake8
   - pipenv install
  
 script:
