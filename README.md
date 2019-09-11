@@ -17,6 +17,14 @@ With [pipenv](https://github.com/pypa/pipenv) installed, run:
 pipenv install
 ```
 
+## Running tests
+
+To run tests:
+```
+$ pipenv shell
+$ export PYTHONPATH=$(pwd)/src/; pytest
+```
+
 ## Usage
 
 TODO

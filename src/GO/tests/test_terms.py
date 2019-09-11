@@ -6,14 +6,19 @@ import os
 import sys
 import json
 sys.path.append('../')
-import obo_parser
+
+# Note 19/9/11: I'm not sure what these tests are actually testing. They just open existing
+# JSON files and run asserts on their contents. They don't test the parser at all
+
+def get_file_dir():
+    return os.path.dirname(__file__)
 
 class TestGOTerm(unittest.TestCase):
     def test_term_keys_exist(self):
         """
         Test terms contain all given fields from the GO ontology OBO file.
         """
-        path = os.path.join(os.getcwd(), 'data', 'GO_term.json')
+        path = os.path.join(get_file_dir(), 'data', 'GO_term.json')
         with open(path, 'rt') as json_file: 
             json_files = []
             for data in json_file:
@@ -48,7 +53,7 @@ class TestGOTerm(unittest.TestCase):
         """
         Test obsolete terms are labeled obsolete in GO ontology OBO file.
         """
-        path = os.path.join(os.getcwd(), 'data', 'GO_term.json')
+        path = os.path.join(get_file_dir(), 'data', 'GO_term.json')
         with open(path, 'rt') as json_file: 
             json_files = []
             for data in json_file:
