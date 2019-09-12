@@ -683,30 +683,35 @@ def test_expire_extant_vertices_without_last_version(arango_db):
     arango_db.create_collection('reg')
 
     test_data = [
-        {'_key': '0', 'id': 'baz', 'created': 100, 'expired': 300, 'last_version': '2'},
-        {'_key': '1', 'id': 'foo', 'created': 100, 'expired': 600, 'last_version': '1'},
-        {'_key': '2', 'id': 'bar', 'created': 100, 'expired': 200, 'last_version': '1'},
-        {'_key': '3', 'id': 'bar', 'created': 201, 'expired': 300, 'last_version': '2'},
-        {'_key': '4', 'id': 'bar', 'created': 301, 'expired': 400, 'last_version': '2'},
+        {'_key': '0', 'id': 'baz', 'created': 100, 'expired': 300,
+         'release_created': 99, 'release_expired': 299, 'last_version': '2'},
+        {'_key': '1', 'id': 'foo', 'created': 100, 'expired': 600,
+         'release_created': 99, 'release_expired': 599, 'last_version': '1'},
+        {'_key': '2', 'id': 'bar', 'created': 100, 'expired': 200,
+         'release_created': 99, 'release_expired': 199, 'last_version': '1'},
+        {'_key': '3', 'id': 'bar', 'created': 201, 'expired': 300,
+         'release_created': 198, 'release_expired': 299, 'last_version': '2'},
+        {'_key': '4', 'id': 'bar', 'created': 301, 'expired': 400,
+         'release_created': 298, 'release_expired': 399, 'last_version': '2'},
         ]
     col.import_bulk(test_data)
 
     att = ArangoBatchTimeTravellingDB(arango_db, 'reg', col_name,    default_edge_collection='e')
 
     # test 1
-    att.expire_extant_vertices_without_last_version(100, "2")
+    att.expire_extant_vertices_without_last_version(100, 99, "2")
 
     expected = [
         {'_key': '0', '_id': 'verts/0', 'id': 'baz', 'created': 100, 'expired': 300,
-         'last_version': '2'},
+         'release_created': 99, 'release_expired': 299, 'last_version': '2'},
         {'_key': '1', '_id': 'verts/1', 'id': 'foo', 'created': 100, 'expired': 100,
-         'last_version': '1'},
+         'release_created': 99, 'release_expired': 99, 'last_version': '1'},
         {'_key': '2', '_id': 'verts/2', 'id': 'bar', 'created': 100, 'expired': 100,
-         'last_version': '1'},
+         'release_created': 99, 'release_expired': 99, 'last_version': '1'},
         {'_key': '3', '_id': 'verts/3', 'id': 'bar', 'created': 201, 'expired': 300,
-         'last_version': '2'},
+         'release_created': 198, 'release_expired': 299, 'last_version': '2'},
         {'_key': '4', '_id': 'verts/4', 'id': 'bar', 'created': 301, 'expired': 400,
-         'last_version': '2'},
+         'release_created': 298, 'release_expired': 399, 'last_version': '2'},
         ]
 
     check_docs(arango_db, expected, col_name)
@@ -715,19 +720,19 @@ def test_expire_extant_vertices_without_last_version(arango_db):
     col.delete_match({})
     col.import_bulk(test_data)
 
-    att.expire_extant_vertices_without_last_version(299, "1")
+    att.expire_extant_vertices_without_last_version(299, 297, "1")
 
     expected = [
         {'_key': '0', '_id': 'verts/0', 'id': 'baz', 'created': 100, 'expired': 299,
-         'last_version': '2'},
+         'release_created': 99, 'release_expired': 297, 'last_version': '2'},
         {'_key': '1', '_id': 'verts/1', 'id': 'foo', 'created': 100, 'expired': 600,
-         'last_version': '1'},
+         'release_created': 99, 'release_expired': 599, 'last_version': '1'},
         {'_key': '2', '_id': 'verts/2', 'id': 'bar', 'created': 100, 'expired': 200,
-         'last_version': '1'},
+         'release_created': 99, 'release_expired': 199, 'last_version': '1'},
         {'_key': '3', '_id': 'verts/3', 'id': 'bar', 'created': 201, 'expired': 299,
-         'last_version': '2'},
+         'release_created': 198, 'release_expired': 297, 'last_version': '2'},
         {'_key': '4', '_id': 'verts/4', 'id': 'bar', 'created': 301, 'expired': 400,
-         'last_version': '2'},
+         'release_created': 298, 'release_expired': 399, 'last_version': '2'},
         ]
 
     check_docs(arango_db, expected, col_name)
@@ -746,15 +751,15 @@ def test_expire_extant_edges_without_last_version(arango_db):
 
     test_data = [
         {'_key': '0', 'id': 'baz', 'created': 100, 'expired': 300, 'last_version': '2',
-         '_from': 'fake/1', '_to': 'fake/2'},
+         'release_created': 99, 'release_expired': 299, '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '1', 'id': 'foo', 'created': 100, 'expired': 600, 'last_version': '1',
-         '_from': 'fake/1', '_to': 'fake/2'},
+         'release_created': 99, 'release_expired': 599, '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '2', 'id': 'bar', 'created': 100, 'expired': 200, 'last_version': '1',
-         '_from': 'fake/1', '_to': 'fake/2'},
+         'release_created': 99, 'release_expired': 199, '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '3', 'id': 'bar', 'created': 201, 'expired': 300, 'last_version': '2',
-         '_from': 'fake/1', '_to': 'fake/2'},
+         'release_created': 198, 'release_expired': 299, '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '4', 'id': 'bar', 'created': 301, 'expired': 400, 'last_version': '2',
-         '_from': 'fake/1', '_to': 'fake/2'},
+         'release_created': 298, 'release_expired': 399, '_from': 'fake/1', '_to': 'fake/2'},
         ]
     col.import_bulk(test_data)
 
@@ -762,18 +767,23 @@ def test_expire_extant_edges_without_last_version(arango_db):
         arango_db, 'reg', 'v', edge_collections=[col_name], merge_collection='m')
 
     # test 1
-    att.expire_extant_edges_without_last_version(100, '2', edge_collection=col_name)
+    att.expire_extant_edges_without_last_version(100, 99, '2', edge_collection=col_name)
 
     expected = [
         {'_key': '0', '_id': 'edges/0', 'id': 'baz', 'created': 100, 'expired': 300,
+        'release_created': 99, 'release_expired': 299, 
          'last_version': '2', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '1', '_id': 'edges/1', 'id': 'foo', 'created': 100, 'expired': 100,
+        'release_created': 99, 'release_expired': 99, 
          'last_version': '1', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '2', '_id': 'edges/2', 'id': 'bar', 'created': 100, 'expired': 100,
+        'release_created': 99, 'release_expired': 99, 
          'last_version': '1', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '3', '_id': 'edges/3', 'id': 'bar', 'created': 201, 'expired': 300,
+        'release_created': 198, 'release_expired': 299, 
          'last_version': '2', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '4', '_id': 'edges/4', 'id': 'bar', 'created': 301, 'expired': 400,
+        'release_created': 298, 'release_expired': 399, 
          'last_version': '2', '_from': 'fake/1', '_to': 'fake/2'},
         ]
 
@@ -783,18 +793,23 @@ def test_expire_extant_edges_without_last_version(arango_db):
     col.delete_match({})
     col.import_bulk(test_data)
 
-    att.expire_extant_edges_without_last_version(299, '1', edge_collection=col_name)
+    att.expire_extant_edges_without_last_version(299, 297, '1', edge_collection=col_name)
 
     expected = [
         {'_key': '0', '_id': 'edges/0', 'id': 'baz', 'created': 100, 'expired': 299,
+        'release_created': 99, 'release_expired': 297, 
          'last_version': '2', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '1', '_id': 'edges/1', 'id': 'foo', 'created': 100, 'expired': 600,
+        'release_created': 99, 'release_expired': 599, 
          'last_version': '1', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '2', '_id': 'edges/2', 'id': 'bar', 'created': 100, 'expired': 200,
+        'release_created': 99, 'release_expired': 199, 
          'last_version': '1', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '3', '_id': 'edges/3', 'id': 'bar', 'created': 201, 'expired': 299,
+        'release_created': 198, 'release_expired': 297, 
          'last_version': '2', '_from': 'fake/1', '_to': 'fake/2'},
         {'_key': '4', '_id': 'edges/4', 'id': 'bar', 'created': 301, 'expired': 400,
+        'release_created': 298, 'release_expired': 399, 
          'last_version': '2', '_from': 'fake/1', '_to': 'fake/2'},
         ]
 
@@ -805,11 +820,16 @@ def test_expire_extant_edges_without_last_version(arango_db):
 ##############################################
 
 REVERT_TEST_DATA = [
-    {'_key': '0', 'id': 'baz', 'created': 100, 'expired': 300, 'last_version': '2'},
-    {'_key': '1', 'id': 'foo', 'created': 100, 'expired': 600, 'last_version': '1'},
-    {'_key': '2', 'id': 'bar', 'created': 100, 'expired': 200, 'last_version': '1'},
-    {'_key': '3', 'id': 'bar', 'created': 201, 'expired': 300, 'last_version': '2'},
-    {'_key': '4', 'id': 'bar', 'created': 301, 'expired': 400, 'last_version': '2'},
+    {'_key': '0', 'id': 'baz', 'created': 100, 'expired': 300,
+     'release_created': 99, 'release_expired': 299, 'last_version': '2'},
+    {'_key': '1', 'id': 'foo', 'created': 100, 'expired': 600,
+     'release_created': 99, 'release_expired': 599, 'last_version': '1'},
+    {'_key': '2', 'id': 'bar', 'created': 100, 'expired': 200,
+     'release_created': 99, 'release_expired': 199, 'last_version': '1'},
+    {'_key': '3', 'id': 'bar', 'created': 201, 'expired': 300,
+     'release_created': 198, 'release_expired': 299, 'last_version': '2'},
+    {'_key': '4', 'id': 'bar', 'created': 301, 'expired': 400,
+     'release_created': 298, 'release_expired': 399, 'last_version': '2'},
     ]
 
 def _prep_data_for_revert_tests(colname, edge=False):
@@ -923,6 +943,8 @@ def test_undo_expire_documents(arango_db):
         att.undo_expire_documents(col.name, 300)
         actual_expected[0]['expired'] = 9007199254740991
         actual_expected[3]['expired'] = 9007199254740991
+        actual_expected[0]['release_expired'] = 9007199254740991
+        actual_expected[3]['release_expired'] = 9007199254740991
     
         check_docs(arango_db, actual_expected, col.name)
 
@@ -1388,9 +1410,9 @@ def test_batch_expire_vertex(arango_db):
     create_timetravel_collection(arango_db, 'e', edge=True)
     arango_db.create_collection('reg')
 
-    expected = [{'_id': 'v/1', '_key': '1', 'id': 'foo', 'expired': 1000},
-                {'_id': 'v/2', '_key': '2', 'id': 'bar', 'expired': 1000},
-                {'_id': 'v/3', '_key': '3', 'id': 'baz', 'expired': 1000},
+    expected = [{'_id': 'v/1', '_key': '1', 'id': 'foo', 'expired': 1000, 'release_expired': 900},
+                {'_id': 'v/2', '_key': '2', 'id': 'bar', 'expired': 1000, 'release_expired': 900},
+                {'_id': 'v/3', '_key': '3', 'id': 'baz', 'expired': 1000, 'release_expired': 900},
                 ]
 
     col.import_bulk(expected)
@@ -1398,8 +1420,8 @@ def test_batch_expire_vertex(arango_db):
     att = ArangoBatchTimeTravellingDB(arango_db, 'reg', 'v', default_edge_collection='e')
     b = att.get_batch_updater()
 
-    b.expire_vertex('1', 500)
-    b.expire_vertex('2', 500)
+    b.expire_vertex('1', 500, 400)
+    b.expire_vertex('2', 500, 400)
 
     check_docs(arango_db, expected, 'v') # expect no changes
 
@@ -1407,9 +1429,9 @@ def test_batch_expire_vertex(arango_db):
     b.update()
     assert b.count() == 0
 
-    expected = [{'_id': 'v/1', '_key': '1', 'id': 'foo', 'expired': 500},
-                {'_id': 'v/2', '_key': '2', 'id': 'bar', 'expired': 500},
-                {'_id': 'v/3', '_key': '3', 'id': 'baz', 'expired': 1000},
+    expected = [{'_id': 'v/1', '_key': '1', 'id': 'foo', 'expired': 500, 'release_expired': 400},
+                {'_id': 'v/2', '_key': '2', 'id': 'bar', 'expired': 500, 'release_expired': 400},
+                {'_id': 'v/3', '_key': '3', 'id': 'baz', 'expired': 1000, 'release_expired': 900},
                 ]
     check_docs(arango_db, expected, 'v')
 
@@ -1426,7 +1448,7 @@ def test_batch_expire_vertex_fail_not_vertex_collection(arango_db):
 
     b = att.get_batch_updater('e')
 
-    check_exception(lambda: b.expire_vertex('k', 1), ValueError,
+    check_exception(lambda: b.expire_vertex('k', 1, 1), ValueError,
         'Batch updater is configured for an edge collection')
 
 def test_batch_expire_edge(arango_db):
@@ -1438,11 +1460,11 @@ def test_batch_expire_edge(arango_db):
     arango_db.create_collection('reg')
 
     expected = [{'_id': 'e/1', '_key': '1', '_from': 'v/2', '_to': 'v/1', 'id': 'foo',
-                 'expired': 1000},
+                 'expired': 1000, 'release_expired': 900},
                 {'_id': 'e/2', '_key': '2', '_from': 'v/2', '_to': 'v/1', 'id': 'bar',
-                 'expired': 1000},
+                 'expired': 1000, 'release_expired': 900},
                 {'_id': 'e/3', '_key': '3', '_from': 'v/2', '_to': 'v/1', 'id': 'baz',
-                 'expired': 1000},
+                 'expired': 1000, 'release_expired': 900},
                 ]
 
     col.import_bulk(expected)
@@ -1452,8 +1474,8 @@ def test_batch_expire_edge(arango_db):
 
     # these 'edges' are cheating - normally they'd be pulled from the db and have many
     # more fields, but I happen to know that just these fields are needed.
-    b.expire_edge({'_key': '1', '_from': 'v/2', '_to': 'v/1'}, 500)
-    b.expire_edge({'_key': '2', '_from': 'v/2', '_to': 'v/1'}, 500)
+    b.expire_edge({'_key': '1', '_from': 'v/2', '_to': 'v/1'}, 500, 400)
+    b.expire_edge({'_key': '2', '_from': 'v/2', '_to': 'v/1'}, 500, 400)
 
     check_docs(arango_db, expected, 'e') # expect no changes
 
@@ -1462,11 +1484,11 @@ def test_batch_expire_edge(arango_db):
     assert b.count() == 0
 
     expected = [{'_id': 'e/1', '_key': '1', '_from': 'v/2', '_to': 'v/1', 'id': 'foo',
-                 'expired': 500},
+                 'expired': 500, 'release_expired': 400},
                 {'_id': 'e/2', '_key': '2', '_from': 'v/2', '_to': 'v/1', 'id': 'bar',
-                 'expired': 500},
+                 'expired': 500, 'release_expired': 400},
                 {'_id': 'e/3', '_key': '3', '_from': 'v/2', '_to': 'v/1', 'id': 'baz',
-                 'expired': 1000},
+                 'expired': 1000, 'release_expired': 900},
                 ]
     check_docs(arango_db, expected, 'e')
 
@@ -1483,7 +1505,7 @@ def test_batch_expire_edge_fail_not_edge_collection(arango_db):
 
     b = att.get_batch_updater()
 
-    check_exception(lambda: b.expire_edge({}, 1), ValueError,
+    check_exception(lambda: b.expire_edge({}, 1, 1), ValueError,
         'Batch updater is configured for a vertex collection')
 
 ####################################

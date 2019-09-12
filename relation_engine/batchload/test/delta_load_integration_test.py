@@ -165,7 +165,7 @@ def _load_no_merge_source(arango_db, batchsize):
          'release_created': 400, 'release_expired': ADB_MAX_TIME, 'data': 'super sweet'},
         {'id': 'old', '_key': 'old_v0', '_id': 'v/old_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'foo'},
+         'release_created': 99, 'release_expired': 399, 'data': 'foo'},
         {'id': 'same1', '_key': 'same1_v0', '_id': 'v/same1_v0',
          'first_version': 'v0', 'last_version': 'v2', 'created': 100, 'expired': ADB_MAX_TIME,
          'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': {'bar': 'baz'}},
@@ -174,13 +174,13 @@ def _load_no_merge_source(arango_db, batchsize):
          'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': ['bar', 'baz']},
         {'id': 'up1', '_key': 'up1_v0', '_id': 'v/up1_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': {'old': 'data'}},
+         'release_created': 99, 'release_expired': 399, 'data': {'old': 'data'}},
         {'id': 'up1', '_key': 'up1_v2', '_id': 'v/up1_v2',
          'first_version': 'v2', 'last_version': 'v2', 'created': 500, 'expired': ADB_MAX_TIME,
          'release_created': 400, 'release_expired': ADB_MAX_TIME, 'data': {'new': 'data'}},
         {'id': 'up2', '_key': 'up2_v0', '_id': 'v/up2_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': ['old', 'data']},
+         'release_created': 99, 'release_expired': 399, 'data': ['old', 'data']},
         {'id': 'up2', '_key': 'up2_v2', '_id': 'v/up2_v2',
          'first_version': 'v2', 'last_version': 'v2', 'created': 500, 'expired': ADB_MAX_TIME,
          'release_created': 400, 'release_expired': ADB_MAX_TIME, 'data': ['old', 'data1']},
@@ -204,11 +204,11 @@ def _load_no_merge_source(arango_db, batchsize):
         {'id': 'old', 'from': 'old', 'to': 'up1',
          '_key': 'old_v0', '_id': 'def_e/old_v0', '_from': 'v/old_v0', '_to': 'v/up1_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'foo'},
+         'release_created': 99, 'release_expired': 399, 'data': 'foo'},
         {'id': 'up1', 'from': 'same1', 'to': 'up1',
          '_key': 'up1_v0', '_id': 'def_e/up1_v0', '_from': 'v/same1_v0', '_to': 'v/up1_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'bar'},
+         'release_created': 99, 'release_expired': 399, 'data': 'bar'},
         {'id': 'up1', 'from': 'same1', 'to': 'up1',
          '_key': 'up1_v2', '_id': 'def_e/up1_v2', '_from': 'v/same1_v0', '_to': 'v/up1_v2',
          'first_version': 'v2', 'last_version': 'v2', 'created': 500, 'expired': ADB_MAX_TIME,
@@ -221,7 +221,7 @@ def _load_no_merge_source(arango_db, batchsize):
         {'id': 'old', 'from': 'old', 'to': 'same1',
          '_key': 'old_v0', '_id': 'e1/old_v0', '_from': 'v/old_v0', '_to': 'v/same1_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'baz'},
+         'release_created': 99, 'release_expired': 399, 'data': 'baz'},
         {'id': 'same', 'from': 'same1', 'to': 'same2',
          '_key': 'same_v0', '_id': 'e1/same_v0', '_from': 'v/same1_v0', '_to': 'v/same2_v0',
          'first_version': 'v0', 'last_version': 'v2', 'created': 100, 'expired': ADB_MAX_TIME,
@@ -234,7 +234,7 @@ def _load_no_merge_source(arango_db, batchsize):
         {'id': 'change', 'from': 'same1', 'to': 'same2',
          '_key': 'change_v0', '_id': 'e2/change_v0', '_from': 'v/same1_v0', '_to': 'v/same2_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'baz'},
+         'release_created': 99, 'release_expired': 399, 'data': 'baz'},
         {'id': 'change', 'from': 'same1', 'to': 'same2',
          '_key': 'change_v2', '_id': 'e2/change_v2', '_from': 'v/same1_v0', '_to': 'v/same2_v0',
          'first_version': 'v2', 'last_version': 'v2', 'created': 500, 'expired': ADB_MAX_TIME,
@@ -242,7 +242,7 @@ def _load_no_merge_source(arango_db, batchsize):
         {'id': 'up2', 'from': 'up2', 'to': 'same2',
          '_key': 'up2_v0', '_id': 'e2/up2_v0', '_from': 'v/up2_v0', '_to': 'v/same2_v0',
          'first_version': 'v0', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'boof'},
+         'release_created': 99, 'release_expired': 399, 'data': 'boof'},
         {'id': 'up2', 'from': 'up2', 'to': 'same2',
          '_key': 'up2_v2', '_id': 'e2/up2_v2', '_from': 'v/up2_v2', '_to': 'v/same2_v0',
          'first_version': 'v2', 'last_version': 'v2', 'created': 500, 'expired': ADB_MAX_TIME,
@@ -322,7 +322,7 @@ def test_merge_edges(arango_db):
          'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'foo'},
         {'id': 'merged', '_key': 'merged_v1', '_id': 'v/merged_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'bar'},
+         'release_created': 99, 'release_expired': 399, 'data': 'bar'},
         {'id': 'target', '_key': 'target_v1', '_id': 'v/target_v1',
          'first_version': 'v1', 'last_version': 'v2', 'created': 100, 'expired': ADB_MAX_TIME,
          'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'baz'},
@@ -334,7 +334,7 @@ def test_merge_edges(arango_db):
         {'id': 'to_m', 'from': 'root', 'to': 'merged',
          '_key': 'to_m_v1', '_id': 'e/to_m_v1', '_from': 'v/root_v1', '_to': 'v/merged_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 100, 'expired': 499,
-         'release_created': 99, 'release_expired': ADB_MAX_TIME, 'data': 'foo'},
+         'release_created': 99, 'release_expired': 399, 'data': 'foo'},
         {'id': 'to_t', 'from': 'root', 'to': 'target',
          '_key': 'to_t_v1', '_id': 'e/to_t_v1', '_from': 'v/root_v1', '_to': 'v/target_v1',
          'first_version': 'v1', 'last_version': 'v2', 'created': 100, 'expired': ADB_MAX_TIME,
@@ -441,10 +441,10 @@ def test_rollback_with_merge_collection(arango_db):
          'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '1'},
         {'id': '3', '_key': '3_v1', '_id': 'v/3_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '3'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '3'},
         {'id': '4', '_key': '4_v1', '_id': 'v/4_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '4'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '4'},
     ]
 
     check_docs(arango_db, vexpected, 'v')
@@ -462,7 +462,7 @@ def test_rollback_with_merge_collection(arango_db):
         {'id': '1', 'from': '1', 'to': '1',
          '_key': '1_v1', '_id': 'e1/1_v1', '_from': 'f/1_v1', '_to': 'f/1_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '1'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '1'},
     ]
 
     check_docs(arango_db, e1_expected, 'e1')
@@ -471,7 +471,7 @@ def test_rollback_with_merge_collection(arango_db):
         {'id': '1', 'from': '1', 'to': '1',
          '_key': '1_v1', '_id': 'e2/1_v1', '_from': 'f/1_v1', '_to': 'f/1_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '1'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '1'},
     ]
 
     check_docs(arango_db, e2_expected, 'e2')
@@ -542,10 +542,10 @@ def test_rollback_without_merge_collection(arango_db):
          'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '1'},
         {'id': '3', '_key': '3_v1', '_id': 'v/3_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '3'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '3'},
         {'id': '4', '_key': '4_v1', '_id': 'v/4_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '4'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '4'},
     ]
 
     check_docs(arango_db, vexpected, 'v')
@@ -558,11 +558,11 @@ def test_rollback_without_merge_collection(arango_db):
         {'id': '3', 'from': '3', 'to': '3',
          '_key': '3_v1', '_id': 'e/3_v1', '_from': 'f/3_v1', '_to': 'f/3_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '3'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '3'},
         {'id': '4', 'from': '4', 'to': '4',
          '_key': '4_v1', '_id': 'e/4_v1', '_from': 'f/4_v1', '_to': 'f/4_v1',
          'first_version': 'v1', 'last_version': 'v1', 'created': 0, 'expired': ADB_MAX_TIME,
-         'release_created': 0, 'release_expired': 298, 'k': '4'},
+         'release_created': 0, 'release_expired': ADB_MAX_TIME, 'k': '4'},
     ]
 
     check_docs(arango_db, e_expected, 'e')
