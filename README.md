@@ -6,6 +6,10 @@ To run these importers, you need to have the `RE_ADMIN` auth role in your enviro
 
 This is an experimental utility that imports genome and biochemistry data into an ArangoDB graph.
 
+Build status (master):
+[![Build Status](https://travis-ci.org/kbase/relation_engine_importers.svg?branch=master)](https://travis-ci.org/kbase/relation_engine_importers)
+[![Coverage Status](https://coveralls.io/repos/github/kbase/relation_engine_importers/badge.svg)](https://coveralls.io/github/kbase/relation_engine_importers)
+
 ## Setup
 
 For Ubuntu (and possibly other distributions) ensure that the appropriate `python-dev` package
