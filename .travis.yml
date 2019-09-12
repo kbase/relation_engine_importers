@@ -20,7 +20,7 @@ script:
 # TODO FLAKE8 lots of errors. Need to be fixed, but later
 #  - flake8 src
   - mkdir arangodata
-  - $ARANGO start --starter.mode single --starter.data-dir ./arangodata
+  - $ARANGO start --starter.wait --starter.mode single --starter.data-dir ./arangodata
   - export PYTHONPATH=$(pwd):$(pwd)/src; pytest --verbose --cov=. .
   - $ARANGO stop
 
