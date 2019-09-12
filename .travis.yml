@@ -11,7 +11,7 @@ install:
   - export ARANGO_FILE=arangodb3-linux-$ARANGODB_VER.tar.gz
   - wget https://download.arangodb.com/arangodb$ARANGODB_V/Community/Linux/$ARANGO_FILE
   - tar xfz $ARANGO_FILE
-  - export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin
+  - export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
 
   - pip install pipenv coverage pytest-cov python-coveralls flake8
   - pipenv install
