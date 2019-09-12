@@ -2,14 +2,28 @@ sudo: required
 language: python
 python: "3.7"
 
+env:
+    # TODO add more arango versions when they exist
+    # TODO could split tests so non-arango tests aren't run for every version
+    - ARANGODB_VER=3.5.0 ARANGODB_V=35
+
 install:
+  - export ARANGO_FILE=arangodb3-linux-$ARANGODB_VER.tar.gz
+  - wget https://download.arangodb.com/arangodb$ARANGODB_V/Community/Linux/$ARANGO_FILE
+  - tar xfz $ARANGO_FILE
+  - export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
+  - export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
+
   - pip install pipenv coverage pytest-cov python-coveralls flake8
   - pipenv install
  
 script:
 # TODO FLAKE8 lots of errors. Need to be fixed, but later
 #  - flake8 src
-  - export PYTHONPATH=$(pwd)/src; pytest --verbose --cov=src src
+  - mkdir arangodata
+  - $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
+  - export PYTHONPATH=$(pwd):$(pwd)/src; pytest --verbose --cov=. .
+  - $ARANGO stop
 
 after_success:
   - coveralls
