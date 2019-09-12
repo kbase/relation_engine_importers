@@ -76,14 +76,15 @@ def load_graph_delta(
         _process_merges(db, merge_source, timestamp, release_timestamp, load_version, batch_size)
     
     if _VERBOSE: print(f'expiring vertices: {_time.time()}')
-    db.expire_extant_vertices_without_last_version(timestamp - 1, load_version)
+    db.expire_extant_vertices_without_last_version(
+        timestamp - 1, release_timestamp - 1, load_version)
 
     _process_edges(db, edge_source, timestamp, release_timestamp, load_version, batch_size)
     
     if _VERBOSE: print(f'expiring edges: {_time.time()}')
     for col in db.get_edge_collections():
         db.expire_extant_edges_without_last_version(
-            timestamp - 1, load_version, edge_collection=col)
+            timestamp - 1, release_timestamp -1,  load_version, edge_collection=col)
 
     db.register_load_complete(load_namespace, load_version, _get_current_timestamp())
 
@@ -110,7 +111,7 @@ def _process_verts(db, vertex_source, timestamp, release_timestamp, load_version
             if not dbv:
                 bulk.create_vertex(v[_ID], load_version, timestamp, release_timestamp, v)
             elif not _special_equal(v, dbv):
-                bulk.expire_vertex(dbv[_KEY], timestamp - 1)
+                bulk.expire_vertex(dbv[_KEY], timestamp - 1, release_timestamp - 1)
                 bulk.create_vertex(v[_ID], load_version, timestamp, release_timestamp, v)
             else:
                 # mark node as seen in this version
@@ -143,7 +144,7 @@ def _process_merges(db, merge_source, timestamp, release_timestamp, load_version
             # trying to figure out where to set the edge if nodes are deleted gets complicated,
             # so we don't worry about it for now.
             if dbmerged and dbtarget:
-                vertbulk.expire_vertex(dbmerged[_KEY], timestamp - 1)
+                vertbulk.expire_vertex(dbmerged[_KEY], timestamp - 1, release_timestamp - 1)
                 bulk.create_edge(
                     m[_ID], dbmerged, dbtarget, load_version, timestamp, release_timestamp, m)
         if _VERBOSE: print(f'  updating {bulk.count()} edges: {_time.time()}')
@@ -205,7 +206,7 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
                         # This is an abstraction leak, bleah
                         dbe['_from'] != from_['_id'] or
                         dbe['_to'] != to['_id']):
-                    bulk.expire_edge(dbe, timestamp - 1)
+                    bulk.expire_edge(dbe, timestamp - 1, release_timestamp - 1)
                     bulk.create_edge(
                         e[_ID], from_, to, load_version, timestamp, release_timestamp, e)
                 else:
@@ -282,7 +283,6 @@ def roll_back_last_load(database, load_namespace):
 
     for c in collections:
         db.delete_created_documents(c, timestamp)
-        # TODO NOW pass release timestamp 
         db.undo_expire_documents(c, timestamp - 1)
         db.reset_last_version(c, current_ver, prior_ver)
     
