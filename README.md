@@ -126,6 +126,9 @@ except for a few special fields:
 |`first_version`| the ID of the first load in which the edge or node appeared.|
 |`created`| the timestamp, in unix epoch milliseconds, when the edge or node came into existence.|
 |`expired`| the timestamp, in unix epoch milliseconds, when the edge or node was deleted.|
+|`release_created`| the timestamp, in unix epoch milliseconds, when the edge or node came into existence at the data source.|
+|`release_expired`| the timestamp, in unix epoch milliseconds, when the edge or node was deleted at the data source.|
+
 
 These fields, with the exception of `_collection`, will be overwritten if included in the `dicts`
 emitted from the providers. In the case of edges, `_collection` will be removed from the edge
