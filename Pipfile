@@ -11,6 +11,7 @@ biopython = "==1.72"
 parsec = "==3.3"
 networkx = "==2.3"
 pytest = "*"
+python-arango = "==4.4.0"
 
 [requires]
 python_version = "3.7"
