@@ -7,7 +7,6 @@ Common code for dealing with NCBI taxonomy files.
 import re
 import unicodedata
 from collections import defaultdict
-from relation_engine.batchload.load_utils import canonicalize
 
 _SEP = r'\s\|\s?'
 _SCI_NAME = 'scientific name'

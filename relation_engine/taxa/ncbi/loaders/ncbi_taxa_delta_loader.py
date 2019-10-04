@@ -9,9 +9,9 @@ import unicodedata
 from arango import ArangoClient
 from urllib.parse import urlparse
 
-from relation_engine.ncbi.taxa.parsers import NCBINodeProvider
-from relation_engine.ncbi.taxa.parsers import NCBIEdgeProvider
-from relation_engine.ncbi.taxa.parsers import NCBIMergeProvider
+from relation_engine.taxa.ncbi.parsers import NCBINodeProvider
+from relation_engine.taxa.ncbi.parsers import NCBIEdgeProvider
+from relation_engine.taxa.ncbi.parsers import NCBIMergeProvider
 from relation_engine.batchload.delta_load import load_graph_delta
 from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTravellingDB
 
