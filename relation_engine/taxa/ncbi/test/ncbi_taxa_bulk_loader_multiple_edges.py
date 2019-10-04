@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+# TEST SCRIPT - puts edges in 3 different collections for testing multiple edges
+
 # Authors: Sean McCorkle, Gavin Price
 # 
 # This script transforms an NCBI taxa dump into ArangoDB (ADB) JSON bulk load format.
@@ -18,19 +20,19 @@
 #       ncbi_taxa_nodes.json    - the taxa vertexes
 #       ncbi_taxa_edges.json    - the taxa edges
 
-# TODO TESTS
-
 import argparse
+import json
 import os
 import unicodedata
 
+from contextlib import ExitStack
 from relation_engine.batchload.load_utils import process_nodes
-from relation_engine.batchload.load_utils import process_edges
-from relation_engine.ncbi.taxa.parsers import NCBINodeProvider
-from relation_engine.ncbi.taxa.parsers import NCBIEdgeProvider
+from relation_engine.batchload.load_utils import process_edges, process_edge
+from relation_engine.taxa.ncbi.parsers import NCBINodeProvider
+from relation_engine.taxa.ncbi.parsers import NCBIEdgeProvider
 
-NODES_OUT_FILE = 'ncbi_taxa_nodes.json'
-EDGES_OUT_FILE = 'ncbi_taxa_edges.json'
+NODES_OUT_FILE = 'ncbi_taxa_nodes_e3_test.json'
+EDGES_OUT_FILE = 'ncbi_taxa_edges_e3_test.json'
 
 NAMES_IN_FILE = 'names.dmp'
 NODES_IN_FILE = 'nodes.dmp'
@@ -66,9 +68,18 @@ def main():
         nodeprov = NCBINodeProvider(namesfile, infile)
         process_nodes(nodeprov, a.load_version, a.load_timestamp, node_out)
 
-    with open(nodes) as infile, open(edges_out, 'w') as edgef:
+    with ExitStack() as stack:
+        infile = stack.enter_context(open(nodes))
+        files = {
+            1: stack.enter_context(open(edges_out + '_1', 'w')),
+            2: stack.enter_context(open(edges_out + '_2', 'w')),
+            3: stack.enter_context(open(edges_out + '_3', 'w'))
+        }
         edgeprov = NCBIEdgeProvider(infile)
-        process_edges(edgeprov, a.load_version, a.load_timestamp, edgef)
+        for e in edgeprov:
+            e = process_edge(e, a.load_version, a.load_timestamp)
+            fileno = int(e['id']) % 3 + 1
+            files[fileno].write(json.dumps(e) + '\n')
 
 if __name__  == '__main__':
     main()
