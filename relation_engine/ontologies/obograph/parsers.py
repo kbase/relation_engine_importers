@@ -1,7 +1,7 @@
 """
 Common code for dealing with OBOGraph JSON files.
 
-So far this has only been run with GO Basic.
+So far this has only been run with GO Basic and ENVO.
 """
 
 # TODO TEST
@@ -66,7 +66,7 @@ class OBOGraphLoader:
     def __init__(self, obo, ontology_id_prefix, graph_id=None):
         """
         Create the loader.
-        obojson - the OBO graph as loaded from the JSON file.
+        obo - the OBO graph as loaded from the JSON file.
         ontology_id_prefix - the ID prefix of the ontology to be loaded, e.g. GO or ENVO. This
           is used to exclude nodes and edges that are not part of the ontology.
         graph_id - the ID of the graph in the OBOgraph to load. If there is only one graph this
