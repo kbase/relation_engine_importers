@@ -72,8 +72,7 @@ class GTDBEdgeProvider:
             lineage = _get_lineage(lineage)
             for i in range(len(lineage) - 1):
                 parent_id = _taxon_to_id(lineage[i])
-                child = lineage[i + 1]
-                child_id = _taxon_to_id(child)
+                child_id = _taxon_to_id(lineage[i + 1])
                 if child_id not in seen_taxa:
                     yield {
                         'id': child_id,  # one edge per child
