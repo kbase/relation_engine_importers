@@ -114,23 +114,22 @@ class RDPEdgeProvider:
 # returns None in the first argument if the lineage indicates an outgroup.
 # second argument indicates if the sequence is unclassfied below the provided lineage
 def _get_lineage(linstr):
-    lin = linstr.replace('Lineage=', '')
-    l = lin.split(';')
-    if not l[-1].strip():
-        l = l[0:-1]
+    lin = linstr.replace('Lineage=', '').split(';')
+    if not lin[-1].strip():
+        lin = lin[0:-1]
     unclassified = False
-    if len(l) % 2 != 0:
-        if l[-1].startswith('unclassified_'):
+    if len(lin) % 2 != 0:
+        if lin[-1].startswith('unclassified_'):
             unclassified = True
-        elif l[-1].endswith('Outgroup'):
+        elif lin[-1].endswith('Outgroup'):
             return None, False
         else:
             raise ValueError('Unprocessable lineage; ' + linstr)
-        l = l[0:-1]
+        lin = lin[0:-1]
     ret = []
-    for i in range(0, len(l) - 1, 2):
-        name, incertae_sedis = _incertae_sedis(l[i])
-        rank = l[i + 1].strip().strip('"')
+    for i in range(0, len(lin) - 1, 2):
+        name, incertae_sedis = _incertae_sedis(lin[i])
+        rank = lin[i + 1].strip().strip('"')
         ret.append({
             'rank': rank,
             'name': name.strip('"'),

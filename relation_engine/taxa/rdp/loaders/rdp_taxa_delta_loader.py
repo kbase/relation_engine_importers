@@ -21,17 +21,18 @@ from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTr
 _LOAD_NAMESPACE = 'rdp_taxa'
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=
-"""
-Load one or more RDP taxonomy dump files into an ArangoDB time travelling database, calculating
-and applying the changes between the prior load and the current load, and retaining the prior load.
-""".strip())
+    parser = argparse.ArgumentParser(description=(
+        "Load one or more RDP taxonomy dump files into an ArangoDB time travelling database, "
+        "calculating and applying the changes between the prior load and the current load, and "
+        "retaining the prior load."))
     parser.add_argument('--file-16S', action='append',
                         help='a RDP taxonomy gzipped FASTA file containing 16S data, e.g. ' + 
-                            'current_Bacteria_unaligned.fa.gz')
+                            'current_Bacteria_unaligned.fa.gz. This option may be specified ' +
+                            'more than once.')
     parser.add_argument('--file-28S', action='append',
                         help='a RDP taxonomy gzipped FASTA file containing 28S data, e.g. ' + 
-                            'current_Fungi_unaligned.fa.gz')
+                            'current_Fungi_unaligned.fa.gz. This option may be specified ' +
+                            'more than once.')
     parser.add_argument(
         '--arango-url',
         required=True,
