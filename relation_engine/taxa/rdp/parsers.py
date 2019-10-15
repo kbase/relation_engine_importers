@@ -5,8 +5,13 @@ Common code for dealing with RDP taxonomy files.
 # TODO TEST
 # TODO DOCS better documentation.
 
+import re
+
 _16S = '16S'
 _28S = '28S'
+_INCERTAE_SEDIS = 'incertae_sedis'
+
+_RE_INCERTAE_SEDIS = re.compile('[_ ][Ii]ncertae[_ ][Ss]edis')
 
 class RDPNodeProvider:
     """
@@ -46,11 +51,12 @@ class RDPNodeProvider:
                 l_id = _taxon_to_id(l)
                 if l_id not in seen_taxa:
                     yield {
-                        'id': l_id,
+                        'id': l_id.replace('/', '_'),
                         'rank': l['rank'],
                         'name': l['name'],
                         'unclassified': False,
-                        'molecule': None
+                        'molecule': None,
+                        _INCERTAE_SEDIS: l[_INCERTAE_SEDIS]
                     }
                 seen_taxa.add(l_id)
             yield {
@@ -58,7 +64,8 @@ class RDPNodeProvider:
                 'rank': 'sequence_example',
                 'name': definition.strip(),
                 'unclassified': unclassified,
-                'molecule': molecule
+                'molecule': molecule,
+                _INCERTAE_SEDIS: None
             }
 
 class RDPEdgeProvider:
@@ -88,8 +95,8 @@ class RDPEdgeProvider:
                 if not lineage:  # it's an outgroup
                     continue
                 for i in range(len(lineage) - 1):
-                    parent_id = _taxon_to_id(lineage[i])
-                    child_id = _taxon_to_id(lineage[i + 1])
+                    parent_id = _taxon_to_id(lineage[i]).replace('/', '_')
+                    child_id = _taxon_to_id(lineage[i + 1]).replace('/', '_')
                     if child_id not in seen_taxa:
                         yield {
                             'id': child_id,  # one edge per child
@@ -97,7 +104,7 @@ class RDPEdgeProvider:
                             'to': parent_id
                         }
                         seen_taxa.add(child_id)
-                parent_id = _taxon_to_id(lineage[-1])
+                parent_id = _taxon_to_id(lineage[-1]).replace('/', '_')
                 yield {
                     'id': locus,  # one edge per child
                     'from': locus,
@@ -122,10 +129,31 @@ def _get_lineage(linstr):
         l = l[0:-1]
     ret = []
     for i in range(0, len(l) - 1, 2):
-        name = l[i].strip().strip('"')
+        name, incertae_sedis = _incertae_sedis(l[i])
         rank = l[i + 1].strip().strip('"')
-        ret.append({'rank': rank, 'name': name})
+        ret.append({
+            'rank': rank,
+            'name': name.strip('"'),
+            _INCERTAE_SEDIS: incertae_sedis})
     return ret, unclassified
 
 def _taxon_to_id(taxon):
-    return f"{taxon['rank']}:{taxon['name'].replace(' ', '_')}"
+    is_ = ':is' if taxon[_INCERTAE_SEDIS] else ''
+    return f"{taxon['rank']}:{taxon['name'].replace(' ', '_')}{is_}"
+
+
+def _incertae_sedis(name):
+    """
+    Determine if a name denotes an incertae sedis taxon placement, remove the incertae sedis text,
+    and return the cleaned name (1st arg) and a boolean (2nd) that denotes whether the name
+    was cleaned or not.
+
+    This method depends heavily on the idiosyncratic way in which RDP denotes that a taxonomic
+    placement is uncertain.
+
+    For the 11.5 release, in no case was there taxa of the same rank where both the standard
+    name and the incertae sedis name existed concurrently.
+    """
+
+    newname = _RE_INCERTAE_SEDIS.sub('', name.strip())
+    return newname, name != newname
