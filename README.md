@@ -45,6 +45,10 @@ TODO
 
 Time travelling code is in the `relation_engine` directory / package.
 
+It is expected that users running the loaders are familiar with the data types being loaded,
+python programming, and KBase infrastructure. For details on the data processing of each loader,
+consult the corresponding `parsers.py` class.
+
 There are two types of loaders supported in this repo, bulk loaders and delta loaders.
 
 ### Bulk loaders
@@ -70,16 +74,33 @@ Loads can be rolled back with the `relation_engine/batchload/rollback_delta_load
 
 ### Existing loaders
 
+Use the `--help` option to get instructions for how to use each of the loaders.
+
 #### NCBI Taxonomy Dump Format
 
-Bulk loader: `relation_engine/ncbi/taxa/loaders/ncbi_taxa_bulk_loader.py`  
-Delta loader: `relation_engine/ncbi/taxa/loaders/ncbi_taxa_delta_loader.py`
+Bulk loader: `relation_engine/taxa/ncbi/loaders/ncbi_taxa_bulk_loader.py`  
+Delta loader: `relation_engine/taxa/ncbi/loaders/ncbi_taxa_delta_loader.py`
+
+#### GTDB Taxonomy
+
+Since GTDB does not have stable IDs for nodes, the delta loader may not be able to track nodes
+correctly across loads.
+
+There is no bulk loader.
+Delta loader: `relation_engine/taxa/gtdb/loaders/gtbd_taxa_delta_loader.py`
+
+#### RDP Taxonomy
+
+There is no bulk loader.
+Delta loader: `relation_engine/taxa/rdp/loaders/rdp_taxa_delta_loadery.py`
 
 #### OBOGraph Ontology JSON Format
 
 There is no bulk loader as ontologies are small enough that an initial load is usually very
 fast even with the delta loader.  
 Delta loader: `relation_engine/ontologies/obograph/loaders/obograph_delta_loader.py`
+
+The loader has been used to load GO and ENVO ontologies.
 
 ### Requirements
 
