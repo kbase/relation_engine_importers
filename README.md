@@ -91,6 +91,9 @@ Delta loader: `relation_engine/taxa/gtdb/loaders/gtbd_taxa_delta_loader.py`
 
 #### RDP Taxonomy
 
+Since RDP does not have stable IDs for nodes, the delta loader may not be able to track nodes
+correctly across loads.
+
 There is no bulk loader.
 Delta loader: `relation_engine/taxa/rdp/loaders/rdp_taxa_delta_loadery.py`
 
