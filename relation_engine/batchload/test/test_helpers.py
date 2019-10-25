@@ -13,6 +13,7 @@ def check_exception(action, exception, message):
     except exception as e:
         assert e.args[0] == message
 
+
 def check_docs(arango_db, docs, collection):
     """
     Check that an ArangoDB collection contains the specified documents. Ignores the _rev key.

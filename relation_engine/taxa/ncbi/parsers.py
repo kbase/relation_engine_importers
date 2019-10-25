@@ -5,7 +5,6 @@ Common code for dealing with NCBI taxonomy files.
 # TODO TEST
 
 import re
-import unicodedata
 from collections import defaultdict
 
 _SEP = r'\s\|\s?'
@@ -17,6 +16,7 @@ _RANK_SUBSPECIES = 'subspecies'
 # The child nodes have names like "ananassae species complex" or "mayaguana subcluster" or
 # "unclassified Bisgaard taxa
 _SPECIES_RANKS = set([_RANK_SPECIES, _RANK_SUBSPECIES])
+
 
 class NCBINodeProvider:
     """
@@ -74,29 +74,30 @@ class NCBINodeProvider:
             record = re.split(_SEP, line)
             # should really make the ints constants but meh
             id_, rank, gencode = [record[i].strip() for i in [0, 2, 6]]
-            
+
             aliases = []
             # May need to move names into separate nodes for canonical search purposes
             for cat in list(self._names[id_].keys()):
                 if cat != _SCI_NAME:
                     for nam in self._names[id_][cat]:
-                        aliases.append({'category':  cat,'name': nam})
+                        aliases.append({'category':  cat, 'name': nam})
 
             # vertex
             sci_names = self._names[id_][_SCI_NAME]
             if len(sci_names) != 1:
                 raise ValueError('Node {} has {} scientific names'.format(id_, len(sci_names)))
             node = {
-                    'id':                         id_,
-                    'scientific_name':            sci_names[0],
-                    'rank':                       rank,
-                    'strain':                     id_ in self._strain_tax_ids,
-                    'aliases':                    aliases,
-                    'ncbi_taxon_id':              int(id_),
-                    'gencode':                    int(gencode),
-                    }
-            
+                'id':                         id_,
+                'scientific_name':            sci_names[0],
+                'rank':                       rank,
+                'strain':                     id_ in self._strain_tax_ids,
+                'aliases':                    aliases,
+                'ncbi_taxon_id':              int(id_),
+                'gencode':                    int(gencode),
+            }
+
             yield node
+
 
 class NCBIEdgeProvider:
     """
@@ -120,13 +121,14 @@ class NCBIEdgeProvider:
 
             if id_ == parent:
                 continue  # no self edges
-            
+
             edge = {
-                'id': id_, # since there's 1 edge / child the child id uniquely IDs the edge
+                'id': id_,  # since there's 1 edge / child the child id uniquely IDs the edge
                 'from': id_,
                 'to': parent
             }
             yield edge
+
 
 class NCBIMergeProvider:
     """
@@ -146,7 +148,7 @@ class NCBIMergeProvider:
             record = re.split(_SEP, line)
             merged = record[0].strip()
             edge = {
-                'id': merged, # since you can't merge into multiple nodes, the id is a unique id
+                'id': merged,  # since you can't merge into multiple nodes, the id is a unique id
                 'from': merged,
                 'to': record[1].strip()
             }

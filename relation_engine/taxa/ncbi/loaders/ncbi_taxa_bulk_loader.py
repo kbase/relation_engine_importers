@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # Authors: Sean McCorkle, Gavin Price
-# 
+#
 # This script transforms an NCBI taxa dump into ArangoDB (ADB) JSON bulk load format.
 
 # It should only be used for an initial load into the DB; delta loads for subsequent tax dumps
@@ -14,7 +14,7 @@
 # 3) The time stamp for the load in unix epoch milliseconds - all nodes and edges will be marked
 #    with this timestamp as the creation date.
 
-# The script creates two JSON files for uploading into Arango:   
+# The script creates two JSON files for uploading into Arango:
 #       ncbi_taxa_nodes.json    - the taxa vertexes
 #       ncbi_taxa_edges.json    - the taxa edges
 
@@ -22,7 +22,6 @@
 
 import argparse
 import os
-import unicodedata
 
 from relation_engine.batchload.load_utils import process_nodes
 from relation_engine.batchload.load_utils import process_edges
@@ -34,6 +33,7 @@ EDGES_OUT_FILE = 'ncbi_taxa_edges.json'
 
 NAMES_IN_FILE = 'names.dmp'
 NODES_IN_FILE = 'nodes.dmp'
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -54,6 +54,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def main():
     a = parse_args()
     nodes = os.path.join(a.dir, NODES_IN_FILE)
@@ -70,5 +71,6 @@ def main():
         edgeprov = NCBIEdgeProvider(infile)
         process_edges(edgeprov, a.load_version, a.load_timestamp, edgef)
 
-if __name__  == '__main__':
+
+if __name__ == '__main__':
     main()

@@ -64,6 +64,7 @@ def get_opener(filename):
         opener = importlib.import_module(module).open
     return opener
 
+
 def read_obo(path_or_file):
     """
     Return a networkx.MultiDiGraph of the ontology serialized by the
@@ -90,9 +91,9 @@ def read_obo(path_or_file):
     edge_tuples = list()
 
     for term in terms:
-#         is_obsolete = term.get('is_obsolete', 'false') == 'true'
-#         if is_obsolete:
-#             continue
+        #         is_obsolete = term.get('is_obsolete', 'false') == 'true'
+        #         if is_obsolete:
+        #             continue
         term_id = term.pop('id')
         graph.add_node(term_id, **term)
 
@@ -203,7 +204,7 @@ header_tag_singularity = {
     'treat-xrefs-as-is_a': False,
     'relax-unique-identifier-assumption-for-namespace': False,
     'relax-unique-label-assumption-for-namespace': False,
-    }
+}
 
 term_tag_singularity = {
     'id': True,
@@ -233,7 +234,7 @@ term_tag_singularity = {
     # Additional tags in 1.4:
     'created_by': True,
     'creation_date': True,
-    }
+}
 
 typedef_tag_singularity = {
     'id': True,
@@ -257,7 +258,7 @@ typedef_tag_singularity = {
     'union_of': False,
     'intersection_of': False,
     'disjoint_from': False
-    }
+}
 
 instance_tag_singularity = {
     'id': True,
@@ -278,5 +279,4 @@ instance_tag_singularity = {
     'is_obsolete': True,
     'replaced_by': False,
     'consider': False,
-    }
-
+}

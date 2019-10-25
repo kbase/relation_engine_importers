@@ -1,6 +1,6 @@
 """
 Classes for interfacing with the KBase relation engine database, specifically with graphs that
-are versioned with batch time travelling (see 
+are versioned with batch time travelling (see
 https://github.com/kbaseIncubator/relation_engine_incubator/blob/master/delta_load_algorithm.md)
 
 The classes and methods here were created for the purpose of supporting the graph delta loader, but
@@ -8,7 +8,8 @@ more classes and methods can be added as needed.
 
 """
 
-# TODO CODE check id, from, and to for validity per https://www.arangodb.com/docs/stable/data-modeling-naming-conventions-document-keys.html
+# TODO CODE check id, from, and to for validity per
+# https://www.arangodb.com/docs/stable/data-modeling-naming-conventions-document-keys.html
 
 from arango.exceptions import AQLQueryExecuteError as _AQLQueryExecuteError
 from arango.exceptions import DocumentDeleteError as _DocumentDeleteError
@@ -49,6 +50,7 @@ _FLD_RGSTR_STATE_ROLLBACK = 'rollback'
 # in unix epoch ms this is 2255/6/5
 _MAX_ADB_INTEGER = 2**53 - 1
 
+
 class ArangoBatchTimeTravellingDBFactory:
     """
     This class allows for creating a time travelling database based on ArangoDB but delegating
@@ -57,7 +59,7 @@ class ArangoBatchTimeTravellingDBFactory:
     database - the python_arango ArangoDB database containing the data to query or modify.
     load_registry_collection - the name of the collection where loads will be listed.
     """
-    
+
     # may want to make this an BatchTimeTravellingDBFactory interface, but pretty unlikely we'll switch...
 
     def __init__(self, database, load_registry_collection):
@@ -97,7 +99,7 @@ class ArangoBatchTimeTravellingDBFactory:
           This can be overridden.
         edge_collections - a list of any edge collections in the graph.
           The collections are checked for existence and cached for performance reasons.
-        merge_collection - a collection containing edges that indicate that a node has been 
+        merge_collection - a collection containing edges that indicate that a node has been
           merged into another node.
         """
         return ArangoBatchTimeTravellingDB(
@@ -107,6 +109,7 @@ class ArangoBatchTimeTravellingDBFactory:
             default_edge_collection=default_edge_collection,
             edge_collections=edge_collections,
             merge_collection=merge_collection)
+
 
 class ArangoBatchTimeTravellingDB:
     """
@@ -136,7 +139,7 @@ class ArangoBatchTimeTravellingDB:
           This can be overridden.
         edge_collections - a list of any edge collections in the graph.
           The collections are checked for existence and cached for performance reasons.
-        merge_collection - a collection containing edges that indicate that a node has been 
+        merge_collection - a collection containing edges that indicate that a node has been
           merged into another node.
 
         Specifying an edge collection in a method argument that is not in edge_collections,
@@ -167,14 +170,14 @@ class ArangoBatchTimeTravellingDB:
         cols = [self._vertex_collection] + list(self._edgecols.values())
         if self.get_merge_collection():
             cols.append(self._merge_collection)
-        
+
         id_indexes = {}
         for col in cols:
-            idx = col.indexes() # http request
+            idx = col.indexes()  # http request
             id_indexes[col.name] = self._get_index_name(col.name, self._ID_EXP_CRE_INDEX, idx)
             # check the other required index exists. Don't need to store it for later though
             self._get_index_name(col.name, self._EXP_CRE_LAST_VER_INDEX, idx)
-        
+
         return id_indexes
 
     _ID_EXP_CRE_INDEX = {
@@ -182,7 +185,7 @@ class ArangoBatchTimeTravellingDB:
         'fields': [_FLD_ID, _FLD_EXPIRED, _FLD_CREATED],
         'sparse': False,
         'unique': False
-        }
+    }
 
     _EXP_CRE_LAST_VER_INDEX = {
         'type': 'persistent',
@@ -197,7 +200,7 @@ class ArangoBatchTimeTravellingDB:
                 continue
             return idx['name']
         raise ValueError(f'Collection {col_name} is missing required index with ' +
-            f'specification {index_spec}')
+                         f'specification {index_spec}')
 
     def _is_index_equivalent(self, index_spec, index):
         for field in index_spec:
@@ -244,7 +247,7 @@ class ArangoBatchTimeTravellingDB:
                _FLD_RGSTR_VERTEX_COLLECTION: self._vertex_collection.name,
                _FLD_RGSTR_MERGE_COLLECTION: self.get_merge_collection(),
                _FLD_RGSTR_EDGE_COLLECTIONS: sorted(list(self._edgecols.keys()))}
-        
+
         try:
             self._database.aql.execute(
                 f'INSERT @d in @@col',
@@ -267,7 +270,7 @@ class ArangoBatchTimeTravellingDB:
         doc = {_FLD_KEY: load_namespace + '_' + load_version,
                _FLD_RGSTR_COMPLETE_TIME: current_time,
                _FLD_RGSTR_STATE: _FLD_RGSTR_STATE_COMPLETE}
-        
+
         try:
             self._database.aql.execute(
                 f'UPDATE @d in @@col',
@@ -288,7 +291,7 @@ class ArangoBatchTimeTravellingDB:
         """
         doc = {_FLD_KEY: load_namespace + '_' + load_version,
                _FLD_RGSTR_STATE: _FLD_RGSTR_STATE_ROLLBACK}
-        
+
         try:
             self._database.aql.execute(
                 f'UPDATE @d in @@col',
@@ -318,7 +321,7 @@ class ArangoBatchTimeTravellingDB:
         except _DocumentDeleteError as e:
             if e.error_code == 1202:
                 raise ValueError(f'There is no load version {load_version} ' +
-                    f'in namespace {load_namespace}')
+                                 f'in namespace {load_namespace}')
 
     def get_vertex_collection(self):
         """
@@ -327,10 +330,10 @@ class ArangoBatchTimeTravellingDB:
         return self._vertex_collection.name
 
     def get_default_edge_collection(self):
-      """
-      Returns the name of the default edge collection or None.
-      """
-      return self._default_edge_collection
+        """
+        Returns the name of the default edge collection or None.
+        """
+        return self._default_edge_collection
 
     def get_edge_collections(self):
         """
@@ -364,21 +367,21 @@ class ArangoBatchTimeTravellingDB:
     def _get_documents(self, ids, timestamp, collection_name):
         id_idx = self._id_indexes[collection_name]
         cur = self._database.aql.execute(
-          f"""
+            f"""
           FOR d IN @@col
               OPTIONS {{indexHint: @id_idx, forceIndexHint: true}}
               FILTER d.{_FLD_ID} IN @ids
               FILTER d.{_FLD_EXPIRED} >= @timestamp AND d.{_FLD_CREATED} <= @timestamp
               RETURN d
           """,
-          bind_vars={'ids': ids, 'timestamp': timestamp, '@col': collection_name, 'id_idx': id_idx}
+            bind_vars={'ids': ids, 'timestamp': timestamp, '@col': collection_name, 'id_idx': id_idx}
         )
         ret = {}
         try:
             for d in cur:
                 if d[_FLD_ID] in ret:
                     raise ValueError(f'db contains > 1 document for id {d[_FLD_ID]}, ' +
-                        f'timestamp {timestamp}, collection {collection_name}')
+                                     f'timestamp {timestamp}, collection {collection_name}')
                 ret[d[_FLD_ID]] = _clean(d)
         finally:
             cur.close(ignore_missing=True)
@@ -404,7 +407,7 @@ class ArangoBatchTimeTravellingDB:
     # may need to separate timestamp into find and expire timestamps, but YAGNI for now
     def expire_extant_vertices_without_last_version(self, timestamp, release_timestamp, version):
         """
-        Expire all vertices that exist at the given timestamp where the last version field is 
+        Expire all vertices that exist at the given timestamp where the last version field is
         not equal to the given version. The expiration date will be the given timestamp.
 
         timestamp - the timestamp to use to find extant vertices as well as the timestamp to use
@@ -425,7 +428,7 @@ class ArangoBatchTimeTravellingDB:
             version,
             edge_collection=None):
         """
-        Expire all edges that exist at the given timestamp where the last version field is 
+        Expire all edges that exist at the given timestamp where the last version field is
         not equal to the given version. The expiration date will be the given timestamp.
 
         timestamp - the timestamp to use to find extant edges as well as the timestamp to use
@@ -439,7 +442,7 @@ class ArangoBatchTimeTravellingDB:
         col = self._get_edge_collection(edge_collection)
         self._expire_extant_document_without_last_version(
             timestamp, release_timestamp, version, col)
-    
+
     def _expire_extant_document_without_last_version(
             self,
             timestamp,
@@ -470,7 +473,7 @@ class ArangoBatchTimeTravellingDB:
         creation_time - the time of creation, in unix epoch milliseconds, of the documents to
           delete.
         """
-        col = self._get_collection(collection) # ensure collection exists
+        col = self._get_collection(collection)  # ensure collection exists
         self._database.aql.execute(
             f"""
             FOR d IN @@col
@@ -488,7 +491,7 @@ class ArangoBatchTimeTravellingDB:
         expire_time - the time of expiration, in unix epoch milliseconds, of the documents to
           un-expire.
         """
-        col = self._get_collection(collection) # ensure collection exists
+        col = self._get_collection(collection)  # ensure collection exists
         self._database.aql.execute(
             f"""
             FOR d IN @@col
@@ -511,7 +514,7 @@ class ArangoBatchTimeTravellingDB:
         last_version - any documents with this last_version will be modified.
         new_last_version - the documents will be modified to this last version.
         """
-        col = self._get_collection(collection) # ensure collection exists
+        col = self._get_collection(collection)  # ensure collection exists
         self._database.aql.execute(
             f"""
             FOR d IN @@col
@@ -538,7 +541,7 @@ class ArangoBatchTimeTravellingDB:
         if not collection:
             if not self._default_edge_collection:
                 raise ValueError('No default edge collection specified, ' +
-                    'must specify edge collection')
+                                 'must specify edge collection')
             return self._edgecols[self._default_edge_collection]
         # again doesn't work without the is not None part. Dunno why.
         if self._merge_collection is not None and collection == self._merge_collection.name:
@@ -560,6 +563,7 @@ class ArangoBatchTimeTravellingDB:
         if not edge_collection_name:
             return BatchUpdater(self._vertex_collection, False)
         return BatchUpdater(self._get_edge_collection(edge_collection_name), True)
+
 
 class BatchUpdater:
 
@@ -667,7 +671,7 @@ class BatchUpdater:
         last_version - the version to set.
         """
         self._update_edge(edge, {_FLD_VER_LST: last_version})
-    
+
     def _update_edge(self, edge, update):
         self._ensure_edge()
         update[_FLD_KEY] = edge[_FLD_KEY]
@@ -728,8 +732,9 @@ class BatchUpdater:
         if not self.is_edge:
             raise ValueError('Batch updater is configured for a vertex collection')
 
+
 def _create_vertex(data, id_, version, created_time, release_time):
-    data = dict(data) # make a copy and overwrite the old data variable
+    data = dict(data)  # make a copy and overwrite the old data variable
     data[_FLD_KEY] = id_ + '_' + version
     data[_FLD_ID] = id_
     data[_FLD_VER_FST] = version
@@ -741,6 +746,7 @@ def _create_vertex(data, id_, version, created_time, release_time):
 
     return data
 
+
 def _create_edge(
         id_,
         from_vertex,
@@ -751,7 +757,7 @@ def _create_edge(
         data):
     data = {} if not data else data
 
-    data = dict(data) # make a copy and overwrite the old data variable
+    data = dict(data)  # make a copy and overwrite the old data variable
     data[_FLD_KEY] = id_ + '_' + version
     data[_FLD_ID] = id_
     data[_FLD_FROM] = from_vertex[_FLD_FULL_ID]
@@ -767,21 +773,27 @@ def _create_edge(
     return data
 
 # if an edge is inserted into a non-edge collection _from and _to are silently dropped
+
+
 def _init_collection(database, collection, edge=False):
     c = database.collection(collection)
-    if not c.properties()['edge'] is edge: # this is a http call
+    if not c.properties()['edge'] is edge:  # this is a http call
         ctype = 'an edge' if edge else 'a vertex'
         raise ValueError(f'{collection} is not {ctype} collection')
     return c
 
 # mutates in place!
+
+
 def _clean(obj):
     for k in _INTERNAL_ARANGO_FIELDS:
-        del obj[k] 
+        del obj[k]
     return obj
 
 # TODO DOCS document fields
 # probably few enough of these that indexes aren't needed
+
+
 def _get_registered_loads(database, registry_collection, load_namespace):
     cur = database.aql.execute(
         f"""
@@ -790,6 +802,6 @@ def _get_registered_loads(database, registry_collection, load_namespace):
             SORT d.{_FLD_RGSTR_LOAD_TIMESTAMP} DESC
             return d
         """,
-        bind_vars = {'load_namespace': load_namespace, '@col': registry_collection.name}
+        bind_vars={'load_namespace': load_namespace, '@col': registry_collection.name}
     )
     return [_clean(d) for d in cur]

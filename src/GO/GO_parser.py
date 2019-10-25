@@ -1,5 +1,5 @@
-import obo_parser 
-import json 
+import obo_parser
+import json
 
 url = 'http://purl.obolibrary.org/obo/go.obo'
 graph = obo_parser.read_obo(url)
@@ -7,16 +7,18 @@ graph = obo_parser.read_obo(url)
 list_of_edges = list(graph.edges)
 list_of_nodes = list(graph.node)
 
+
 def write_relationship_edges(relationship_edges):
     for edge in list_of_edges:
         if edge[2] != 'is_a':
             edge_dict = {}
-            edge_dict['_key'] = str(edge[0] + "__" + edge[1] + "__" +edge[2])
+            edge_dict['_key'] = str(edge[0] + "__" + edge[1] + "__" + edge[2])
             edge_dict['_from'] = "GO_term/" + edge[0]
             edge_dict['_to'] = "GO_term/" + edge[1]
             edge_dict['relationship_type'] = edge[2]
             relationship_edges.write(json.dumps(edge_dict) + "\n")
-            
+
+
 def write_isa_edges(isa_edges):
     for edge in list_of_edges:
         if edge[2] == 'is_a':
@@ -25,7 +27,8 @@ def write_isa_edges(isa_edges):
             edge_dict['_from'] = "GO_term/" + edge[0]
             edge_dict['_to'] = "GO_term/" + edge[1]
             isa_edges.write(json.dumps(edge_dict) + "\n")
-    
+
+
 def write_intersection_edges(intersection_edges):
     for i in range(len(graph.node)):
         curr_node = list_of_nodes[i]
@@ -44,7 +47,8 @@ def write_intersection_edges(intersection_edges):
                     edge_dict["_to"] = "GO_term/" + intersection_term[1]
                     edge_dict["intersection_type"] = intersection_term[0]
                 intersection_edges.write(json.dumps(edge_dict) + "\n")
-                
+
+
 def write_disjoint_edges(disjoint_edges):
     for i in range(len(graph.node)):
         curr_node = list_of_nodes[i]
@@ -55,28 +59,31 @@ def write_disjoint_edges(disjoint_edges):
                 edge_dict["_from"] = "GO_term/" + curr_node
                 edge_dict["_to"] = "GO_term/" + val
                 disjoint_edges.write(json.dumps(edge_dict) + "\n")
-                
+
+
 def write_consider_edges(consider_edges):
     for i in range(len(graph.node)):
         curr_node = list_of_nodes[i]
         if 'consider' in graph.node[curr_node]:
-            edge_dict = {}        
+            edge_dict = {}
             for val in graph.node[curr_node]['consider']:
                 edge_dict['_key'] = str(curr_node + "__" + val + "__consider")
                 edge_dict["_from"] = "GO_term/" + curr_node
                 edge_dict["_to"] = "GO_term/" + val
-                consider_edges.write(json.dumps(edge_dict) + "\n")  
+                consider_edges.write(json.dumps(edge_dict) + "\n")
+
 
 def write_replaced_edges(replaced_edges):
     for i in range(len(graph.node)):
         curr_node = list_of_nodes[i]
         if 'replaced_by' in graph.node[curr_node]:
-            edge_dict = {}        
+            edge_dict = {}
             for val in graph.node[curr_node]['replaced_by']:
                 edge_dict['_key'] = str(curr_node + "__" + val + "__replaced_by")
                 edge_dict["_from"] = "GO_term/" + curr_node
                 edge_dict["_to"] = "GO_term/" + val
-                replaced_edges.write(json.dumps(edge_dict) + "\n")  
+                replaced_edges.write(json.dumps(edge_dict) + "\n")
+
 
 def write_terms(nodes_output):
     for i in range(len(list_of_nodes)):
@@ -106,6 +113,7 @@ def write_terms(nodes_output):
             node_dict['creation_date'] = graph.node[list_of_nodes[i]]['creation_date']
         nodes_output.write(json.dumps(node_dict) + "\n")
 
+
 relationship_edges_path = 'GO_edges_relationship.json'
 isa_edges_path = 'GO_edges_isa.json'
 intersection_edges_path = 'GO_edges_intersection_of.json'
@@ -122,7 +130,8 @@ consider_edges = open(consider_edges_path, 'w')
 replaced_edges = open(replaced_edges_path, 'w')
 nodes_output = open(nodes_path, "w")
 
-to_close = [relationship_edges, isa_edges, intersection_edges, disjoint_edges, consider_edges, replaced_edges, nodes_output]
+to_close = [relationship_edges, isa_edges, intersection_edges,
+            disjoint_edges, consider_edges, replaced_edges, nodes_output]
 
 write_relationship_edges(relationship_edges)
 write_isa_edges(isa_edges)
@@ -132,5 +141,5 @@ write_consider_edges(consider_edges)
 write_replaced_edges(replaced_edges)
 write_terms(nodes_output)
 
-for file in to_close: 
-    file.close() 
+for file in to_close:
+    file.close()

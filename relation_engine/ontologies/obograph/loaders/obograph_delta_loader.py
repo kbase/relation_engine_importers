@@ -5,10 +5,7 @@
 import argparse
 import getpass
 import json
-import os
-import unicodedata
 from arango import ArangoClient
-from urllib.parse import urlparse
 
 from relation_engine.ontologies.obograph.parsers import OBOGraphLoader
 from relation_engine.batchload.delta_load import load_graph_delta
@@ -16,8 +13,7 @@ from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTr
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=
-"""
+    parser = argparse.ArgumentParser(description="""
 Load a OBOGraph ontology file into an ArangoDB time travelling database, calculating and applying
 the changes between the prior load and the current load, and retaining the prior load.
 """.strip())
@@ -37,21 +33,21 @@ the changes between the prior load and the current load, and retaining the prior
     parser.add_argument(
         '--user',
         help='the ArangoDB user name; if --pwd-file is not included a password prompt will be ' +
-            'presented. Omit to connect with default credentials.')
+        'presented. Omit to connect with default credentials.')
     parser.add_argument(
         '--pwd-file',
         help='the path to a file containing the ArangoDB password and nothing else; ' +
-            'if --user is included and --pwd-file is omitted a password prompt will be presented.')
+        'if --user is included and --pwd-file is omitted a password prompt will be presented.')
     parser.add_argument(
         '--load-namespace',
         required=True,
         help='the name of the data that is being loaded, e.g. envo, gene_ontology, etc. ' +
-            'Must be unique across all load sources and consistent across loads.')
+        'Must be unique across all load sources and consistent across loads.')
     parser.add_argument(
         '--load-registry-collection',
         required=True,
         help='the name of the ArangoDB collection where the load will be registered. ' +
-            'This is typically the same collection for all delta loaded data.')
+        'This is typically the same collection for all delta loaded data.')
     parser.add_argument(
         '--node-collection',
         required=True,
@@ -82,19 +78,18 @@ the changes between the prior load and the current load, and retaining the prior
         type=int,
         required=True,
         help='the timestamp, in unix epoch milliseconds, when the data was released ' +
-            'at the source.')
+        'at the source.')
     parser.add_argument(
         '--graph-id',
         help='if there are multiple graphs in the OBOGraph file, specify the full ID of the ' +
-            'graph to be processed. If there is only one graph this flag may be omitted.')
+        'graph to be processed. If there is only one graph this flag may be omitted.')
 
     return parser.parse_args()
 
+
 def main():
     a = parse_args()
-
-    url = urlparse(a.arango_url)
-    client = ArangoClient(protocol=url.scheme, host=url.hostname, port=url.port)
+    client = ArangoClient(hosts=a.arango_url)
     if a.user:
         if a.pwd_file:
             with open(a.pwd_file) as pwd_file:
@@ -113,7 +108,7 @@ def main():
 
     with open(a.file) as f:
         obograph = json.loads(f.read())
-    
+
     loader = OBOGraphLoader(obograph, a.onto_id_prefix, graph_id=a.graph_id)
 
     load_graph_delta(
@@ -126,5 +121,6 @@ def main():
         a.load_version,
         merge_source=loader.get_merge_provider())
 
-if __name__  == '__main__':
+
+if __name__ == '__main__':
     main()
