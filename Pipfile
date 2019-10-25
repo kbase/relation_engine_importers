@@ -6,12 +6,12 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-requests = "==2.19.1"
-biopython = "==1.72"
+requests = "==2.22.0"
+biopython = "==1.74"
 parsec = "==3.3"
-networkx = "==2.3"
-pytest = "*"
-python-arango = "==4.4.0"
+networkx = "==2.4"
+pytest = "==5.2.2"
+python-arango = "==5.2.1"
 
 [requires]
 python_version = "3.7"
