@@ -23,7 +23,8 @@ pipenv install
 
 ## Running tests
 
-To run tests, arangodb must be running locally on the default port with default root credentials.
+To run tests, arangodb must be running locally on the default port with default root credentials. You can run arangodb using docker-compose with `docker-compse up`.
+
 Then from the repository root:
 
 ```sh
