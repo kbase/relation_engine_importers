@@ -4,10 +4,7 @@
 
 import argparse
 import getpass
-import os
-import unicodedata
 from arango import ArangoClient
-from urllib.parse import urlparse
 
 from relation_engine.taxa.gtdb.parsers import GTDBNodeProvider
 from relation_engine.taxa.gtdb.parsers import GTDBEdgeProvider
@@ -16,9 +13,9 @@ from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTr
 
 _LOAD_NAMESPACE = 'gtdb_taxa'
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description=
-"""
+    parser = argparse.ArgumentParser(description="""
 Load a GTDB taxonomy dump into an ArangoDB time travelling database, calculating and applying the
 changes between the prior load and the current load, and retaining the prior load.
 """.strip())
@@ -35,16 +32,16 @@ changes between the prior load and the current load, and retaining the prior loa
     parser.add_argument(
         '--user',
         help='the ArangoDB user name; if --pwd-file is not included a password prompt will be ' +
-            'presented. Omit to connect with default credentials.')
+        'presented. Omit to connect with default credentials.')
     parser.add_argument(
         '--pwd-file',
         help='the path to a file containing the ArangoDB password and nothing else; ' +
-            'if --user is included and --pwd-file is omitted a password prompt will be presented.')
+        'if --user is included and --pwd-file is omitted a password prompt will be presented.')
     parser.add_argument(
         '--load-registry-collection',
         required=True,
         help='the name of the ArangoDB collection where the load will be registered. ' +
-            'This is typically the same collection for all delta loaded data.')
+        'This is typically the same collection for all delta loaded data.')
     parser.add_argument(
         '--node-collection',
         required=True,
@@ -71,14 +68,14 @@ changes between the prior load and the current load, and retaining the prior loa
         type=int,
         required=True,
         help='the timestamp, in unix epoch milliseconds, when the data was released ' +
-            'at the source.')
+        'at the source.')
 
     return parser.parse_args()
 
+
 def main():
     a = parse_args()
-    url = urlparse(a.arango_url)
-    client = ArangoClient(protocol=url.scheme, host=url.hostname, port=url.port)
+    client = ArangoClient(hosts=a.arango_url)
     if a.user:
         if a.pwd_file:
             with open(a.pwd_file) as pwd_file:
@@ -99,7 +96,8 @@ def main():
         edgeprov = GTDBEdgeProvider(in2)
 
         load_graph_delta(_LOAD_NAMESPACE, nodeprov, edgeprov, attdb,
-            a.load_timestamp, a.release_timestamp, a.load_version)
+                         a.load_timestamp, a.release_timestamp, a.load_version)
 
-if __name__  == '__main__':
+
+if __name__ == '__main__':
     main()

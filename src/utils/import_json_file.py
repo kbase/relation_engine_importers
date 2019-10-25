@@ -12,7 +12,6 @@ Options:  -c, --create   overwrite existing collection if it exists
 """
 import time
 import os
-import sys
 import requests
 import logging
 import argparse
@@ -21,7 +20,7 @@ log_file_path = 'import_json_data.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)
 
 
-def bulk_save_post(file_path, col_name, create_collection ):
+def bulk_save_post(file_path, col_name, create_collection):
     """Make a post request to the arango http api to do a bulk save with the file."""
     # Filename is something like genomes-vertex.json
     #   where 'genomes' is the collection name and 'vertex' is document type (can also be 'edge')
@@ -40,9 +39,9 @@ def bulk_save_post(file_path, col_name, create_collection ):
     db_url += '/_api/import'
     user = os.environ.get('DB_USER', 'root')
     passwd = os.environ.get('DB_PASS', 'password')
-    print( "db_url: ", db_url )
-    print( "params: ", query_params )
-    print( "auth: ", user, passwd )
+    print("db_url: ", db_url)
+    print("params: ", query_params)
+    print("auth: ", user, passwd)
     with open(file_path, 'rb') as fd:
         resp = requests.post(db_url, data=fd, params=query_params, auth=(user, passwd))
     logging.info('imported %s' % col_name)
@@ -52,28 +51,28 @@ def bulk_save_post(file_path, col_name, create_collection ):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument( "json_file", help="JSON format file to upload" )
-    parser.add_argument( "-c", "--create", action="store_true", 
-                         help="create collection anew (overwrite)" )
-    parser.add_argument( "-n", "--collection_name", 
-                         help="store in collection name (default comes from filename)" )
+    parser.add_argument("json_file", help="JSON format file to upload")
+    parser.add_argument("-c", "--create", action="store_true",
+                        help="create collection anew (overwrite)")
+    parser.add_argument("-n", "--collection_name",
+                        help="store in collection name (default comes from filename)")
 
     args = parser.parse_args()
 
-    print( "file is ", args.json_file )
-    print( "create ", args.create )
-    print( "collection_name", args.collection_name )
+    print("file is ", args.json_file)
+    print("create ", args.create)
+    print("collection_name", args.collection_name)
 
     start = int(time.time() * 1000)
-    
+
     file_name = args.json_file
     if args.collection_name:
         col_name = args.collection_name
     else:
-        col_name = os.path.splitext( os.path.basename( file_name ) )[0]
+        col_name = os.path.splitext(os.path.basename(file_name))[0]
 
     print('logging to %s' % log_file_path)
-    bulk_save_post(file_name, col_name, args.create )
+    bulk_save_post(file_name, col_name, args.create)
     end = int(time.time() * 1000)
     logging.info('total time running in ms: %s' % (end - start))
     print('..done')

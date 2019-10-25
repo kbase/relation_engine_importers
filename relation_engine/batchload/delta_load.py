@@ -15,13 +15,16 @@ import time as _time
 
 # TODO TEST
 # TODO DOCS document reserved fields that will be overwritten if supplied
-# TODO CODE add notification callback so that the caller can implement % complete or logs or whatever based on what's happening in the delta load algorithm. Remove _VERBOSE prints at that point
+# TODO CODE add notification callback so that the caller can implement %
+# complete or logs or whatever based on what's happening in the delta load
+# algorithm. Remove _VERBOSE prints at that point
 
 # TODO CODE consider threading / multiprocessing here. Virtually all the time is db access
 
 _VERBOSE = False
 _ID = 'id'
 _KEY = '_key'
+
 
 def load_graph_delta(
         load_namespace,
@@ -67,29 +70,33 @@ def load_graph_delta(
     db = database
     if merge_source and not db.get_merge_collection():
         raise ValueError('A merge source is specified but the database ' +
-           'has no merge collection')
+                         'has no merge collection')
     db.register_load_start(
         load_namespace, load_version, timestamp, release_timestamp, _get_current_timestamp())
 
     _process_verts(db, vertex_source, timestamp, release_timestamp, load_version, batch_size)
     if merge_source:
         _process_merges(db, merge_source, timestamp, release_timestamp, load_version, batch_size)
-    
-    if _VERBOSE: print(f'expiring vertices: {_time.time()}')
+
+    if _VERBOSE:
+        print(f'expiring vertices: {_time.time()}')
     db.expire_extant_vertices_without_last_version(
         timestamp - 1, release_timestamp - 1, load_version)
 
     _process_edges(db, edge_source, timestamp, release_timestamp, load_version, batch_size)
-    
-    if _VERBOSE: print(f'expiring edges: {_time.time()}')
+
+    if _VERBOSE:
+        print(f'expiring edges: {_time.time()}')
     for col in db.get_edge_collections():
         db.expire_extant_edges_without_last_version(
-            timestamp - 1, release_timestamp -1,  load_version, edge_collection=col)
+            timestamp - 1, release_timestamp - 1,  load_version, edge_collection=col)
 
     db.register_load_complete(load_namespace, load_version, _get_current_timestamp())
 
+
 def _get_current_timestamp():
     return int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000)
+
 
 def _process_verts(db, vertex_source, timestamp, release_timestamp, load_version, batch_size):
     """
@@ -99,12 +106,15 @@ def _process_verts(db, vertex_source, timestamp, release_timestamp, load_version
     count = 1
     for vertgen in _chunkiter(vertex_source, batch_size):
         vertices = list(vertgen)
-        if _VERBOSE: print(f'vertex batch {count}: {_time.time()}')
+        if _VERBOSE:
+            print(f'vertex batch {count}: {_time.time()}')
         count += 1
         keys = [v[_ID] for v in vertices]
-        if _VERBOSE: print(f'  looking up {len(keys)} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  looking up {len(keys)} vertices: {_time.time()}')
         dbverts = db.get_vertices(keys, timestamp)
-        if _VERBOSE: print(f'  got {len(dbverts)} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  got {len(dbverts)} vertices: {_time.time()}')
         bulk = db.get_batch_updater()
         for v in vertices:
             dbv = dbverts.get(v[_ID])
@@ -116,8 +126,10 @@ def _process_verts(db, vertex_source, timestamp, release_timestamp, load_version
             else:
                 # mark node as seen in this version
                 bulk.set_last_version_on_vertex(dbv[_KEY], load_version)
-        if _VERBOSE: print(f'  updating {bulk.count()} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  updating {bulk.count()} vertices: {_time.time()}')
         bulk.update()
+
 
 def _process_merges(db, merge_source, timestamp, release_timestamp, load_version, batch_size):
     """
@@ -129,12 +141,15 @@ def _process_merges(db, merge_source, timestamp, release_timestamp, load_version
     count = 1
     for mergen in _chunkiter(merge_source, batch_size):
         merges = list(mergen)
-        if _VERBOSE: print(f'merge batch {count}: {_time.time()}')
+        if _VERBOSE:
+            print(f'merge batch {count}: {_time.time()}')
         count += 1
         keys = list({m['from'] for m in merges} | {m['to'] for m in merges})
-        if _VERBOSE: print(f'  looking up {len(keys)} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  looking up {len(keys)} vertices: {_time.time()}')
         dbverts = db.get_vertices(keys, timestamp)
-        if _VERBOSE: print(f'  got {len(dbverts)} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  got {len(dbverts)} vertices: {_time.time()}')
         bulk = db.get_batch_updater(db.get_merge_collection())
         vertbulk = db.get_batch_updater()
         for m in merges:
@@ -147,12 +162,16 @@ def _process_merges(db, merge_source, timestamp, release_timestamp, load_version
                 vertbulk.expire_vertex(dbmerged[_KEY], timestamp - 1, release_timestamp - 1)
                 bulk.create_edge(
                     m[_ID], dbmerged, dbtarget, load_version, timestamp, release_timestamp, m)
-        if _VERBOSE: print(f'  updating {bulk.count()} edges: {_time.time()}')
+        if _VERBOSE:
+            print(f'  updating {bulk.count()} edges: {_time.time()}')
         bulk.update()
-        if _VERBOSE: print(f'  updating {vertbulk.count()} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  updating {vertbulk.count()} vertices: {_time.time()}')
         vertbulk.update()
 
 # assumes verts have been processed
+
+
 def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, batch_size):
     """
     For each edge we're importing, either replace and expire an existing edge, create a
@@ -161,7 +180,8 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
     count = 1
     for edgegen in _chunkiter(edge_source, batch_size):
         edges = list(edgegen)
-        if _VERBOSE: print(f'edge batch {count}: {_time.time()}')
+        if _VERBOSE:
+            print(f'edge batch {count}: {_time.time()}')
         count += 1
         keys = _defaultdict(list)
         bulkset = {}
@@ -178,16 +198,20 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
                 bulkset[col] = db.get_batch_updater(col)
         dbedges = {}
         for col, keys in keys.items():
-            if _VERBOSE: print(f'  looking up {len(keys)} edges in {col}: {_time.time()}')
+            if _VERBOSE:
+                print(f'  looking up {len(keys)} edges in {col}: {_time.time()}')
             dbedges[col] = db.get_edges(keys, timestamp, edge_collection=col)
-            if _VERBOSE: print(f'  got {len(dbedges[col])} edges: {_time.time()}')
-        
+            if _VERBOSE:
+                print(f'  got {len(dbedges[col])} edges: {_time.time()}')
+
         # Could cache these, may be fetching the same vertex over and over, but no guarantees
         # the same vertexes are repeated in a reasonable amount of time
         # Batching the fetch is probably enough
-        if _VERBOSE: print(f'  looking up {len(vertkeys)} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  looking up {len(vertkeys)} vertices: {_time.time()}')
         dbverts = db.get_vertices(list(vertkeys), timestamp)
-        if _VERBOSE: print(f'  got {len(dbverts)} vertices: {_time.time()}')
+        if _VERBOSE:
+            print(f'  got {len(dbverts)} vertices: {_time.time()}')
         keys = None
         vertkeys = None
 
@@ -201,7 +225,7 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
             to = dbverts[e['to']]
             if dbe:
                 if (not _special_equal(e, dbe) or
-                        # these two conditions check whether the nodes the edge is attached to 
+                        # these two conditions check whether the nodes the edge is attached to
                         # have been updated this load
                         # This is an abstraction leak, bleah
                         dbe['_from'] != from_['_id'] or
@@ -218,6 +242,7 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
                 print(f'  updating {b.count()} edges in {b.get_collection()}: {_time.time()}')
             b.update()
 
+
 # TODO CODE these fields are shared between here and the database. Should probably put them somewhere in common.
 # same with the id and _key fields in the code above
 # arango db api is leaking a bit here, but the chance we're going to rewrite this for something
@@ -225,6 +250,7 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
 _SPECIAL_EQUAL_IGNORED_FIELDS = ['_id', _KEY, '_to', '_from', 'created', 'expired',
                                  'release_created', 'release_expired',
                                  'first_version', 'last_version']
+
 
 def _special_equal(doc1, doc2):
     """
@@ -236,8 +262,9 @@ def _special_equal(doc1, doc2):
     for f in _SPECIAL_EQUAL_IGNORED_FIELDS:
         d1c.pop(f, None)
         d2c.pop(f, None)
-    
-    return d1c == d2c 
+
+    return d1c == d2c
+
 
 def _chunkiter(iterable, size):
     """
@@ -248,6 +275,8 @@ def _chunkiter(iterable, size):
         yield _itertools.chain([first], _itertools.islice(iterator, size - 1))
 
 # TODO CODE fields here shared with the DB. Put them somewhere in common.
+
+
 def roll_back_last_load(database, load_namespace):
     """
     Removes the most recent data load to a namespace and reverts it to the prior state.
@@ -270,7 +299,7 @@ def roll_back_last_load(database, load_namespace):
     collections = loads[0]['edge_collections'] + [loads[0]['vertex_collection']]
     if loads[0]['merge_collection']:
         collections.append(loads[0]['merge_collection'])
-    
+
     db = database.get_instance(
         loads[0]['vertex_collection'],
         edge_collections=loads[0]['edge_collections'],
@@ -285,5 +314,5 @@ def roll_back_last_load(database, load_namespace):
         db.delete_created_documents(c, timestamp)
         db.undo_expire_documents(c, timestamp - 1)
         db.reset_last_version(c, current_ver, prior_ver)
-    
+
     db.delete_registered_load(load_namespace, current_ver)

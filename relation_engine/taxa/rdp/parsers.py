@@ -13,6 +13,7 @@ _INCERTAE_SEDIS = 'incertae_sedis'
 
 _RE_INCERTAE_SEDIS = re.compile('[_ ][Ii]ncertae[_ ][Ss]edis')
 
+
 class RDPNodeProvider:
     """
     RDPNodeProvider is an iterable that returns a new RDP taxonomy node as a dict with each
@@ -37,7 +38,7 @@ class RDPNodeProvider:
             yield from self._processfile(_16S, fh, seen_taxa)
         for fh in self._fh_28S:
             yield from self._processfile(_28S, fh, seen_taxa)
-        
+
     def _processfile(self, molecule, fh, seen_taxa):
         for line in fh:
             if not line.startswith('>'):
@@ -67,6 +68,7 @@ class RDPNodeProvider:
                 'molecule': molecule,
                 _INCERTAE_SEDIS: None
             }
+
 
 class RDPEdgeProvider:
     """
@@ -113,6 +115,8 @@ class RDPEdgeProvider:
 
 # returns None in the first argument if the lineage indicates an outgroup.
 # second argument indicates if the sequence is unclassfied below the provided lineage
+
+
 def _get_lineage(linstr):
     lin = linstr.replace('Lineage=', '').split(';')
     if not lin[-1].strip():
@@ -135,6 +139,7 @@ def _get_lineage(linstr):
             'name': name.strip('"'),
             _INCERTAE_SEDIS: incertae_sedis})
     return ret, unclassified
+
 
 def _taxon_to_id(taxon):
     is_ = ':is' if taxon[_INCERTAE_SEDIS] else ''

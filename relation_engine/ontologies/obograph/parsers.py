@@ -8,7 +8,6 @@ So far this has only been run with GO Basic and ENVO.
 # TODO DOCS better documentation.
 # TODO NOW when checking if ID in namespace, split on : and check == id[0] vs .startswith()
 
-import json as _json
 from urllib.parse import urlparse
 
 _OBO_GRAPHS = 'graphs'
@@ -57,6 +56,7 @@ _OUT_XREFS = 'xrefs'
 _OUT_REPLACED_BY = 'replaced_by'
 _OUT_CONSIDER = 'consider'
 
+
 class OBOGraphLoader:
     """
     OBOGraphLoader loads the graph into memory and allows creation of node, edge, and merge
@@ -78,14 +78,14 @@ class OBOGraphLoader:
             raise ValueError('Found more than one graph in the OBO file.')
         else:
             self._obo = obo[_OBO_GRAPHS][0]
-        
+
         unknown_types = {n[_OBO_TYPE] for n in self._obo[_OBO_NODES]
-            if _OBO_TYPE in n} - _OBO_TYPES # Some ENVO nodes don't have types. AAARRARGAGGG
+                         if _OBO_TYPE in n} - _OBO_TYPES  # Some ENVO nodes don't have types. AAARRARGAGGG
         if unknown_types:
             raise ValueError(f'Found unprocessable node types {unknown_types}')
         self._ont_prefix = ontology_id_prefix
         self._property_map = self._get_property_map(obo)
-        
+
     def _get_property_map(self, obo):
         ret = {}
         for g in obo[_OBO_GRAPHS]:
@@ -109,7 +109,7 @@ class OBOGraphLoader:
                             ret[n[_OBO_ID]] = comments[0]
                     else:
                         raise ValueError(f'Property node {n[_OBO_ID]} has no {_OBO_LABEL} ' +
-                            f'and no {_OBO_META}/{_OBO_BASIC_PROPS} fields') 
+                                         f'and no {_OBO_META}/{_OBO_BASIC_PROPS} fields')
         return ret
 
     def _get_graph(self, obo, graph_id):
@@ -179,7 +179,7 @@ class OBOGraphLoader:
             raise ValueError(f'Could not parse id {id_}')
         try:
             int(idc[1])
-        except Exception as _:
+        except Exception:
             raise ValueError(f'Could not parse id {id_}')
         return f'{idc[0]}:{idc[1]}'
 
@@ -214,7 +214,7 @@ class OBOGraphLoader:
 
             ret = {_OUT_ID: id_,
                    _OUT_NODE_TYPE: n[_OBO_TYPE],
-                   _OUT_NAME: n.get(_OBO_LABEL), # some ENVO classes have no label
+                   _OUT_NAME: n.get(_OBO_LABEL),  # some ENVO classes have no label
                    _OUT_NAMESPACE: self._get_meta_property(
                        meta, _OBO_BASIC_PROPS, _OBO_NAMESPACES),
                    _OUT_ALTERNATIVE_IDS: self._get_meta_properties(
@@ -224,7 +224,7 @@ class OBOGraphLoader:
                    _OUT_SUBSETS: meta.get(_OBO_SUBSETS, []) if meta else [],
                    # may need to translate pred for sys and xrefs? I don't see anything in GO basic
                    _OUT_SYNONYMS: self._clean_meta(meta.get(_OBO_SYNONYMS, [])) if meta else [],
-                   _OUT_XREFS: self._clean_meta(meta.get(_OBO_XREFS, [])) if meta else [], 
+                   _OUT_XREFS: self._clean_meta(meta.get(_OBO_XREFS, [])) if meta else [],
                    }
             yield ret
 
@@ -246,7 +246,7 @@ class OBOGraphLoader:
                     yield self._to_edge(from_, to, outpred)
 
     def _to_edge(self, from_, to, predicate):
-        predicate = predicate.replace(' ', '_') # may need to expand this, see
+        predicate = predicate.replace(' ', '_')  # may need to expand this, see
         # https://www.arangodb.com/docs/stable/data-modeling-naming-conventions-document-keys.html
         return {_OUT_ID: f'{from_}::{to}::{predicate}',
                 _OUT_FROM: from_,
@@ -264,7 +264,7 @@ class OBOGraphLoader:
             sub = e[_OBO_SUBJECT]
             obj = e[_OBO_OBJECT]
             if sub in self._property_map or obj in self._property_map:
-                continue # property edge, ignore
+                continue  # property edge, ignore
             from_ = self._clean_obo_id(sub)
             to = self._clean_obo_id(obj)
             if not from_.startswith(self._ont_prefix) or not to.startswith(self._ont_prefix):
@@ -275,4 +275,3 @@ class OBOGraphLoader:
             else:
                 pred = self._strip_url(pred)
             yield self._to_edge(from_, to, pred)
-

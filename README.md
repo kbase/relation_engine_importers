@@ -13,25 +13,21 @@ Build status (master):
 
 ## Setup
 
-For Ubuntu (and possibly other distributions) ensure that the appropriate `python-dev` package
-is installed, e.g. `sudo apt install python3.7-dev`. 
+Install Python 3.7, preferably using pyenv: https://github.com/pyenv/pyenv
 
-With [pipenv](https://github.com/pypa/pipenv) installed, run:
+Then install [pipenv](https://github.com/pypa/pipenv) and run:
 
 ```sh
 pipenv install
 ```
 
-Alternatively, you can use [pyenv](https://github.com/pyenv/pyenv) to manage your python
-installations.
-
 ## Running tests
 
 To run tests, arangodb must be running locally on the default port with default root credentials.
 Then from the repository root:
-```
-$ pipenv shell
-$ export PYTHONPATH=$(pwd):$(pwd)/src/; pytest
+
+```sh
+make test
 ```
 
 ## Standard loader usage

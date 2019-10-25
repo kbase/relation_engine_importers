@@ -3,7 +3,7 @@
 # TEST SCRIPT - puts edges in 3 different collections for testing multiple edges
 
 # Authors: Sean McCorkle, Gavin Price
-# 
+#
 # This script transforms an NCBI taxa dump into ArangoDB (ADB) JSON bulk load format.
 
 # It should only be used for an initial load into the DB; delta loads for subsequent tax dumps
@@ -16,18 +16,17 @@
 # 3) The time stamp for the load in unix epoch milliseconds - all nodes and edges will be marked
 #    with this timestamp as the creation date.
 
-# The script creates two JSON files for uploading into Arango:   
+# The script creates two JSON files for uploading into Arango:
 #       ncbi_taxa_nodes.json    - the taxa vertexes
 #       ncbi_taxa_edges.json    - the taxa edges
 
 import argparse
 import json
 import os
-import unicodedata
 
 from contextlib import ExitStack
 from relation_engine.batchload.load_utils import process_nodes
-from relation_engine.batchload.load_utils import process_edges, process_edge
+from relation_engine.batchload.load_utils import process_edge
 from relation_engine.taxa.ncbi.parsers import NCBINodeProvider
 from relation_engine.taxa.ncbi.parsers import NCBIEdgeProvider
 
@@ -36,6 +35,7 @@ EDGES_OUT_FILE = 'ncbi_taxa_edges_e3_test.json'
 
 NAMES_IN_FILE = 'names.dmp'
 NODES_IN_FILE = 'nodes.dmp'
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -55,6 +55,7 @@ def parse_args():
              'or edges created in this load will start to exist with this time stamp. ')
 
     return parser.parse_args()
+
 
 def main():
     a = parse_args()
@@ -81,5 +82,6 @@ def main():
             fileno = int(e['id']) % 3 + 1
             files[fileno].write(json.dumps(e) + '\n')
 
-if __name__  == '__main__':
+
+if __name__ == '__main__':
     main()

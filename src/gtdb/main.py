@@ -1,5 +1,4 @@
 import json
-import time
 import sys
 
 
@@ -26,7 +25,6 @@ _TAXA_TYPES = {
 def bac_taxonomy_to_json(tsv_path):
     path = tsv_path
     release = path.strip('.tsv')
-    timestamp = str(int(time.time() * 1000))
     gtdb_vertices_path = f'gtdb_taxon.json'
     gtdb_edges_path = f'gtdb_child_of_taxon.json'
     gtdb_vertices_output = open(gtdb_vertices_path, 'a')
@@ -41,7 +39,6 @@ def bac_taxonomy_to_json(tsv_path):
         for line in input_file:
             (accession, lineage) = line.split('\t')
             # Write the gtdb_organism doc
-            refseq_doc = {'_key': accession}
             prev_taxon_key = None
             # Iterate over taxa
             taxa = []  # type: list
@@ -49,30 +46,30 @@ def bac_taxonomy_to_json(tsv_path):
                 (taxon_type_abbrev, taxa_name) = taxon.split('__')
                 taxa_type = _TAXA_TYPES[taxon_type_abbrev]
                 taxa_name = taxa_name.strip('\n').lower()
-                if taxa_type == 'species': 
+                if taxa_type == 'species':
                     taxa_name = taxa_name.split(" ")
-                else: 
+                else:
                     taxa_name = [taxa_name]
                 taxa.append((taxon_type_abbrev, taxa_type, taxa_name))
             for (idx, (taxon_type_abbrev, taxa_type, taxa_name)) in enumerate(taxa):
                 # Write the gtdb_taxon document
-                if taxa_type == 'species': 
+                if taxa_type == 'species':
                     full_name = taxon_type_abbrev + ':' + str("_".join(taxa_name))
-                else: 
+                else:
                     full_name = taxon_type_abbrev + ':' + taxa_name[0]
                 if full_name in found_taxon_names:
                     # We have already recorded this taxon
                     continue
                 vertex_doc = {'_key': full_name, 'release': release, 'rank': taxa_type, 'name': taxa_name
-                            }
+                              }
                 for idx2 in range(0, idx+1):
                     (taxon_type_abbrev, taxa_type, taxa_name) = taxa[idx2]
                     if taxa_type == 'species':
-                        vertex_doc[taxa_type] = str("_".join(taxa_name))  
+                        vertex_doc[taxa_type] = str("_".join(taxa_name))
                     else:
                         vertex_doc[taxa_type] = taxa_name[0]
                 gtdb_vertices_output.write(json.dumps(vertex_doc) + '\n')
-                if prev_taxon_key == None: 
+                if prev_taxon_key is None:
                     prev_root_key = full_name
                     if prev_root_key:
                         edge_doc = {
@@ -98,8 +95,8 @@ def bac_taxonomy_to_json(tsv_path):
                 '_to': "gtdb_taxon/"+taxa[-1][0] + ':' + str("_".join(taxa[-1][2]))
             }
             vertex_doc = {
-                '_key':accession, 
-                'release': release, 
+                '_key': accession,
+                'release': release,
                 'rank': 'genome',
                 'name': taxa_name
             }
@@ -121,5 +118,5 @@ if __name__ == '__main__':
     if option not in commands:
         sys.stderr.write(f'Invalid option: {option}. Valid option: {list(commands.keys())}')
         sys.exit(1)
-    commands[option]()
+    commands[option](sys.argv[2])
     print('-- done --')

@@ -3,15 +3,15 @@
 # Downloads all the NCBI tax dumps from the ftp site. Does not download the new_taxdump* archives.
 # use -h for help.
 
+from ftplib import FTP
+import zipfile
+import pathlib
+import os
+import argparse
 NCBI_HOST = 'ftp.ncbi.nih.gov'
 NCBI_TAX_DIR = '/pub/taxonomy/taxdump_archive/'
 TAXDUMP_PREFIX = 'taxdmp_'
 
-import argparse
-import os
-import pathlib
-import zipfile
-from ftplib import FTP
 
 def parseargs():
     parser = argparse.ArgumentParser(
@@ -20,6 +20,7 @@ def parseargs():
                         help='the directory in which to store the files')
 
     return parser.parse_args()
+
 
 def download_and_unzip(ftp, directory, filename):
     zf = os.path.join(directory, filename)
@@ -33,6 +34,7 @@ def download_and_unzip(ftp, directory, filename):
         # should really check for malicious paths here but we assume NCBI are nice guys
         zipread.extractall(dirname)
 
+
 def main():
     a = parseargs()
     pathlib.Path(a.dir).mkdir(parents=True, exist_ok=True)
@@ -43,6 +45,7 @@ def main():
         for f in ftp.mlsd(facts=['size']):
             if f[0].startswith(TAXDUMP_PREFIX):
                 download_and_unzip(ftp, a.dir, f[0])
+
 
 if __name__ == '__main__':
     main()

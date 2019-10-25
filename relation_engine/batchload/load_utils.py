@@ -1,4 +1,4 @@
-""" 
+"""
 Utilities for loading graph data into the relation engine.
 """
 
@@ -8,6 +8,8 @@ import json
 import unicodedata
 
 # assumes there's at least one non-whitespace char in string
+
+
 def canonicalize(string, ignore_tokens):
     """
     Canonicalizes a string by:
@@ -36,10 +38,12 @@ def canonicalize(string, ignore_tokens):
                 ret.append(t)
     return ret
 
+
 # TODO CODE this should probably be a parameter? YAGNI for now
 # see https://www.arangodb.com/2018/07/time-traveling-with-graph-databases/
 # in unix epoch ms this is 2255/6/5
 _MAX_ADB_INTEGER = 2**53 - 1
+
 
 def process_nodes(nodeprov, load_version, timestamp, nodes_out):
     """
@@ -63,15 +67,16 @@ def process_nodes(nodeprov, load_version, timestamp, nodes_out):
             'last_version':   load_version,
             'created':        timestamp,
             'expired':        _MAX_ADB_INTEGER
-            })
+        })
         nodes_out.write(json.dumps(n) + '\n')
+
 
 def process_edge(edge, load_version, timestamp):
     """
     Note that this funtion modifies the edge argument in place.
 
     Process a graph edge for a batch time travelling load.
-    Adds appropriate fields to the edge. 
+    Adds appropriate fields to the edge.
 
     This function is only suitable for the initial load in the time travelling database.
     Further loads must use a delta load algorithm.
@@ -89,15 +94,16 @@ def process_edge(edge, load_version, timestamp):
     Returns - the updated edge as a dict.
     """
     edge.update({
-            '_key':             edge['id'] + '_' + load_version,
-            '_from':            edge['from'] + '_' + load_version,
-            '_to':              edge['to'] + '_' + load_version,
-            'first_version':    load_version,
-            'last_version':     load_version,
-            'created':          timestamp,
-            'expired':          _MAX_ADB_INTEGER,
-        })
+        '_key':             edge['id'] + '_' + load_version,
+        '_from':            edge['from'] + '_' + load_version,
+        '_to':              edge['to'] + '_' + load_version,
+        'first_version':    load_version,
+        'last_version':     load_version,
+        'created':          timestamp,
+        'expired':          _MAX_ADB_INTEGER,
+    })
     return edge
+
 
 def process_edges(edgeprov, load_version, timestamp, edges_out):
     """

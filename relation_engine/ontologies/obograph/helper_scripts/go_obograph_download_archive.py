@@ -3,13 +3,13 @@
 # Downloads all the GO Basic OBOGraph files from the GO releases site in an extremely hacky way.
 # use -h for help.
 
+import requests
+import pathlib
+import os
+import argparse
 GO_RELEASES_URL = 'http://release.geneontology.org/'
 INDEX_HTML = 'index.html'
 
-import argparse
-import os
-import pathlib
-import requests
 
 def parseargs():
     parser = argparse.ArgumentParser(
@@ -19,12 +19,14 @@ def parseargs():
 
     return parser.parse_args()
 
+
 def download_obograph(directory, date):
     url = GO_RELEASES_URL + date + '/ontology/go-basic.json'
     print(url)
     gb = requests.get(url).text
     with open(os.path.join(directory, 'go-basic_' + date + '.json'), 'w') as f:
         f.write(gb)
+
 
 def main():
     a = parseargs()
@@ -36,6 +38,7 @@ def main():
         if GO_RELEASES_URL in l and INDEX_HTML in l:
             date = l.split(GO_RELEASES_URL)[-1].split('/' + INDEX_HTML)[0]
             download_obograph(a.dir, date)
+
 
 if __name__ == '__main__':
     main()

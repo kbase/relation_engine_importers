@@ -4,7 +4,7 @@
 # This does not test the database wrapper code - it has its own tests.
 
 # TODO TEST start a new arango instance as part of the tests so:
-# a) we remove chance of data corruption and 
+# a) we remove chance of data corruption and
 # b) we don't leave test data around
 
 # TODO TEST add unit tests for the delta load algorithm with a db mock.
@@ -18,15 +18,15 @@ from arango import ArangoClient
 import datetime
 from pytest import fixture
 
-HOST = 'localhost'
-PORT = 8529
+HOST = 'http://localhost:8529'
 DB_NAME = 'test_delta_load_integration_db'
 
 ADB_MAX_TIME = 2**53 - 1
 
+
 @fixture
 def arango_db():
-    client = ArangoClient(protocol='http', host=HOST, port=PORT)
+    client = ArangoClient(hosts=HOST)
     sys = client.db('_system', 'root', '', verify=True)
     sys.delete_database(DB_NAME, ignore_missing=True)
     sys.create_database(DB_NAME)
@@ -35,6 +35,7 @@ def arango_db():
     yield db
 
     sys.delete_database(DB_NAME)
+
 
 ##########################################
 # Delta load tests
@@ -52,14 +53,18 @@ def test_merge_setup_fail(arango_db):
     att = ArangoBatchTimeTravellingDB(arango_db, 'r', 'v', default_edge_collection='e')
 
     # sources are fake, but real not necessary to trigger error
-    check_exception(lambda: load_graph_delta('ns', [], [], att, 1, 1, "2", merge_source=[{}]),
+    check_exception(
+        lambda: load_graph_delta('ns', [], [], att, 1, 1, "2", merge_source=[{}]),
         ValueError, 'A merge source is specified but the database has no merge collection')
+
 
 def test_load_no_merge_source_batch_2(arango_db):
     _load_no_merge_source(arango_db, 2)
 
+
 def test_load_no_merge_source_batch_default(arango_db):
     _load_no_merge_source(arango_db, None)
+
 
 def _load_no_merge_source(arango_db, batchsize):
     """
@@ -75,8 +80,8 @@ def _load_no_merge_source(arango_db, batchsize):
     _import_bulk(
         vcol,
         [
-         {'id': 'expire', 'data': 'foo'},     # expired nodes shouldn't be touched
-         {'id': 'gap', 'data': 'super sweet'}, # even if reintroduced later
+            {'id': 'expire', 'data': 'foo'},       # expired nodes shouldn't be touched
+            {'id': 'gap', 'data': 'super sweet'},  # even if reintroduced later
         ],
         100, 300, 99, 299, 'v0')
 
@@ -84,52 +89,52 @@ def _load_no_merge_source(arango_db, batchsize):
     _import_bulk(
         vcol,
         [
-         {'id': 'old', 'data': 'foo'},            # will be deleted
-         {'id': 'same1', 'data': {'bar': 'baz'}}, # will not change
-         {'id': 'same2', 'data': ['bar', 'baz']}, # will not change
-         {'id': 'up1', 'data': {'old': 'data'}},  # will be updated
-         {'id': 'up2', 'data': ['old', 'data']}   # will be updated
+            {'id': 'old', 'data': 'foo'},             # will be deleted
+            {'id': 'same1', 'data': {'bar': 'baz'}},  # will not change
+            {'id': 'same2', 'data': ['bar', 'baz']},  # will not change
+            {'id': 'up1', 'data': {'old': 'data'}},   # will be updated
+            {'id': 'up2', 'data': ['old', 'data']}    # will be updated
         ],
         100, ADB_MAX_TIME, 99, ADB_MAX_TIME, 'v0', 'v1')
 
     _import_bulk(
         def_ecol,
         [
-         {'id': 'expire', 'from': 'expire', 'to': 'same2', 'data': 'foo'},  # shouldn't be touched
-         {'id': 'gap', 'from': 'gap', 'to': 'same1', 'data': 'bar'}         # ditto
+            {'id': 'expire', 'from': 'expire', 'to': 'same2', 'data': 'foo'},  # shouldn't be touched
+            {'id': 'gap', 'from': 'gap', 'to': 'same1', 'data': 'bar'}         # ditto
         ],
         100, 300, 99, 299, 'v0', vert_col_name=vcol.name)
 
     _import_bulk(
         def_ecol,
         [
-         {'id': 'old', 'from': 'old', 'to': 'up1', 'data': 'foo'},  # will be deleted
-         {'id': 'up1', 'from': 'same1', 'to': 'up1', 'data': 'bar'} # will be updated to new up1
+            {'id': 'old', 'from': 'old', 'to': 'up1', 'data': 'foo'},   # will be deleted
+            {'id': 'up1', 'from': 'same1', 'to': 'up1', 'data': 'bar'}  # will be updated to new up1
         ],
         100, ADB_MAX_TIME, 99, ADB_MAX_TIME, 'v0', 'v1', vert_col_name=vcol.name)
 
     _import_bulk(
         e1col,
         [
-         {'id': 'old', 'from': 'old', 'to': 'same1', 'data': 'baz'},    # will be deleted
-         {'id': 'same', 'from': 'same1', 'to': 'same2', 'data': 'bing'} # no change
+            {'id': 'old', 'from': 'old', 'to': 'same1', 'data': 'baz'},     # will be deleted
+            {'id': 'same', 'from': 'same1', 'to': 'same2', 'data': 'bing'}  # no change
         ],
         100, ADB_MAX_TIME, 99, ADB_MAX_TIME, 'v0', 'v1', vert_col_name=vcol.name)
 
     _import_bulk(
         e2col,
         [
-         {'id': 'change', 'from': 'same1', 'to': 'same2', 'data': 'baz'}, # will be updated
-         {'id': 'up2', 'from': 'up2', 'to': 'same2', 'data': 'boof'}      # will be updated to up2
+            {'id': 'change', 'from': 'same1', 'to': 'same2', 'data': 'baz'},  # will be updated
+            {'id': 'up2', 'from': 'up2', 'to': 'same2', 'data': 'boof'}       # will be updated to up2
         ],
         100, ADB_MAX_TIME, 99, ADB_MAX_TIME, 'v0', 'v1', vert_col_name=vcol.name)
 
     vsource = [
-        {'id': 'same1', 'data': {'bar': 'baz'}}, # will not change
-        {'id': 'same2', 'data': ['bar', 'baz']}, # will not change
-        {'id': 'up1', 'data': {'new': 'data'}},  # will be updated based on data
-        {'id': 'up2', 'data': ['old', 'data1']}, # will be updated based on data
-        {'id': 'gap', 'data': 'super sweet'}     # new node
+        {'id': 'same1', 'data': {'bar': 'baz'}},  # will not change
+        {'id': 'same2', 'data': ['bar', 'baz']},  # will not change
+        {'id': 'up1', 'data': {'new': 'data'}},   # will be updated based on data
+        {'id': 'up2', 'data': ['old', 'data1']},  # will be updated based on data
+        {'id': 'gap', 'data': 'super sweet'}      # new node
     ]
 
     esource = [
@@ -146,11 +151,11 @@ def _load_no_merge_source(arango_db, batchsize):
     ]
 
     db = ArangoBatchTimeTravellingDB(arango_db, 'r', 'v', default_edge_collection='def_e',
-            edge_collections=['e1', 'e2'])
-    
+                                     edge_collections=['e1', 'e2'])
+
     if batchsize:
         load_graph_delta('ns', vsource, esource, db, 500, 400, 'v2', batch_size=batchsize)
-    else: 
+    else:
         load_graph_delta('ns', vsource, esource, db, 500, 400, 'v2')
 
     vexpected = [
@@ -262,7 +267,7 @@ def _load_no_merge_source(arango_db, batchsize):
         # 'completion_time': 0,
         'state': 'complete',
         'vertex_collection': 'v',
-        'merge_collection': None, 
+        'merge_collection': None,
         'edge_collections': ['def_e', 'e1', 'e2']
     }
 
@@ -278,31 +283,31 @@ def test_merge_edges(arango_db):
     ecol = create_timetravel_collection(arango_db, 'e', edge=True)
     create_timetravel_collection(arango_db, 'm', edge=True)
     arango_db.create_collection('r')
-    
+
     _import_bulk(
         vcol,
         [
-         {'id': 'root', 'data': 'foo'},   # will not change
-         {'id': 'merged', 'data': 'bar'}, # will be merged
-         {'id': 'target', 'data': 'baz'}, # will not change
+            {'id': 'root', 'data': 'foo'},    # will not change
+            {'id': 'merged', 'data': 'bar'},  # will be merged
+            {'id': 'target', 'data': 'baz'},  # will not change
         ],
         100, ADB_MAX_TIME, 99, ADB_MAX_TIME, 'v1')
-    
+
     _import_bulk(
         ecol,
         [
-         {'id': 'to_m', 'from': 'root', 'to': 'merged', 'data': 'foo'}, # will be deleted
-         {'id': 'to_t', 'from': 'root', 'to': 'target', 'data': 'bar'}  # shouldn't be touched
+            {'id': 'to_m', 'from': 'root', 'to': 'merged', 'data': 'foo'},  # will be deleted
+            {'id': 'to_t', 'from': 'root', 'to': 'target', 'data': 'bar'}   # shouldn't be touched
         ],
         100, ADB_MAX_TIME, 99, ADB_MAX_TIME, 'v1', vert_col_name=vcol.name)
 
     vsource = [
-        {'id': 'root', 'data': 'foo'},   # will not change
-        {'id': 'target', 'data': 'baz'}, # will not change
+        {'id': 'root', 'data': 'foo'},    # will not change
+        {'id': 'target', 'data': 'baz'},  # will not change
     ]
 
     esource = [
-        {'id': 'to_t', 'from': 'root', 'to': 'target', 'data': 'bar'} # no change
+        {'id': 'to_t', 'from': 'root', 'to': 'target', 'data': 'bar'}  # no change
     ]
 
     msource = [
@@ -312,8 +317,8 @@ def test_merge_edges(arango_db):
     ]
 
     db = ArangoBatchTimeTravellingDB(arango_db, 'r', 'v', default_edge_collection='e',
-            merge_collection='m')
-    
+                                     merge_collection='m')
+
     load_graph_delta('mns', vsource, esource, db, 500, 400, 'v2', merge_source=msource)
 
     vexpected = [
@@ -363,7 +368,7 @@ def test_merge_edges(arango_db):
         # 'completion_time': 0,
         'state': 'complete',
         'vertex_collection': 'v',
-        'merge_collection': 'm', 
+        'merge_collection': 'm',
         'edge_collections': ['e']
     }
 
@@ -372,6 +377,7 @@ def test_merge_edges(arango_db):
 ######################################
 # Rollback tests
 ######################################
+
 
 def test_rollback_fail_nothing_to_roll_back(arango_db):
     """
@@ -382,12 +388,14 @@ def test_rollback_fail_nothing_to_roll_back(arango_db):
     arango_db.create_collection('r')
 
     db = ArangoBatchTimeTravellingDB(arango_db, 'r', 'v', default_edge_collection='e')
-    
+
     db.register_load_start('ns1', 'v1', 1000, 500, 100)
     db.register_load_complete('ns1', 'v1', 150)
 
-    check_exception(lambda: roll_back_last_load(db, 'ns1'), ValueError,
+    check_exception(
+        lambda: roll_back_last_load(db, 'ns1'), ValueError,
         'Nothing to roll back')
+
 
 def test_rollback_with_merge_collection(arango_db):
     """
@@ -409,22 +417,22 @@ def test_rollback_with_merge_collection(arango_db):
     _import_v(vcol, {'id': '4', 'k': '4'}, 0, 299, 0, 298, 'v1', 'v1')
 
     _import_e(edcol, {'id': '1', 'to': '1', 'from': '1', 'k': '1'}, 0, m, 0, m, 'v1', 'v2', 'f')
-    _import_e(edcol, {'id': '2', 'to': '2', 'from': '2', 'k': '2'}, 300, m, 299, m,'v2', 'v2', 'f')
+    _import_e(edcol, {'id': '2', 'to': '2', 'from': '2', 'k': '2'}, 300, m, 299, m, 'v2', 'v2', 'f')
 
     _import_e(e1col, {'id': '1', 'to': '1', 'from': '1', 'k': '1'},
-        0, 299, 0, 298, 'v1', 'v1', 'f')
+              0, 299, 0, 298, 'v1', 'v1', 'f')
     _import_e(e1col, {'id': '1', 'to': '1', 'from': '1', 'k': '1'},
-        300, m, 299, m, 'v2', 'v2', 'f')
+              300, m, 299, m, 'v2', 'v2', 'f')
 
     _import_e(e2col, {'id': '1', 'to': '1', 'from': '1', 'k': '1'},
-        0, 299, 0, 298, 'v1', 'v1', 'f')
+              0, 299, 0, 298, 'v1', 'v1', 'f')
 
     # merge edges are never updated once created
     _import_e(mcol, {'id': '1', 'to': '1', 'from': '1', 'k': '1'}, 0, m, 0, m, 'v1', 'v1', 'f')
     _import_e(mcol, {'id': '2', 'to': '2', 'from': '2', 'k': '2'}, 300, m, 299, m, 'v2', 'v2', 'f')
 
     db = ArangoBatchTimeTravellingDB(arango_db, 'r', 'v', default_edge_collection='def_e',
-        edge_collections=['e1', 'e2'], merge_collection='m')
+                                     edge_collections=['e1', 'e2'], merge_collection='m')
 
     db.register_load_start('ns1', 'v1', 0, 0, 4567)
     db.register_load_complete('ns1', 'v1', 5678)
@@ -496,11 +504,12 @@ def test_rollback_with_merge_collection(arango_db):
         'completion_time': 5678,
         'state': 'complete',
         'vertex_collection': 'v',
-        'merge_collection': 'm', 
+        'merge_collection': 'm',
         'edge_collections': ['def_e', 'e1', 'e2']
     }
 
     _check_registry_doc(arango_db, registry_expected, 'r')
+
 
 # trying to combine with above got too messy
 def test_rollback_without_merge_collection(arango_db):
@@ -578,11 +587,12 @@ def test_rollback_without_merge_collection(arango_db):
         'completion_time': 5678,
         'state': 'complete',
         'vertex_collection': 'v',
-        'merge_collection': None, 
+        'merge_collection': None,
         'edge_collections': ['e']
     }
 
     _check_registry_doc(arango_db, registry_expected, 'r')
+
 
 ######################################
 # Helper funcs
@@ -614,6 +624,7 @@ def _import_bulk(
         d['last_version'] = last_version
     col.import_bulk(docs)
 
+
 # data will be modified in place
 def _import_v(
         col,
@@ -633,6 +644,7 @@ def _import_v(
     d['first_version'] = first_version
     d['last_version'] = last_version
     col.import_bulk([d])
+
 
 # data will be modified in place
 def _import_e(
@@ -670,10 +682,10 @@ def _check_registry_doc(arango_db, expected, collection, compare_times_to_now=Fa
         del doc['completion_time']
         _assert_close_to_now_in_epoch_ms(start)
         _assert_close_to_now_in_epoch_ms(end)
-    
     assert expected == doc
+
 
 def _assert_close_to_now_in_epoch_ms(time):
     now = int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp() * 1000)
     assert now - 2000 < time
-    assert now + 2000 > time   
+    assert now + 2000 > time

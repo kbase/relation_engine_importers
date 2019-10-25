@@ -17,6 +17,7 @@ _TAXA_TYPES = {
     's': 'species',
 }
 
+
 class GTDBNodeProvider:
     """
     GTDBNodeProvider is an iterable that returns a new GTDB taxonomy node as a dict with each
@@ -50,6 +51,7 @@ class GTDBNodeProvider:
                 'rank': 'genome',
                 'name': lineage[-1]['name']
             }
+
 
 class GTDBEdgeProvider:
     """
@@ -87,15 +89,17 @@ class GTDBEdgeProvider:
                 'to': parent_id
             }
 
+
 def _get_lineage(linstr):
-    l = linstr.split(';')
+    ln = linstr.split(';')
     ret = []
-    for lin in l:
+    for lin in ln:
         taxa_abbrev, taxa_name = lin.split('__')
         ret.append({'abbrev': taxa_abbrev, 'name': taxa_name})
     if ret[-1]['abbrev'] != 's':
         raise ValueError(f'Lineage {linstr} does not end with species')
     return ret
+
 
 def _taxon_to_id(taxon):
     return f"{taxon['abbrev']}:{taxon['name'].replace(' ', '_')}"
