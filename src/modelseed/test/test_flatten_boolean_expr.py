@@ -1,6 +1,6 @@
 import unittest
-from arangodb_biochem_importer.flatten_boolean_expr import flatten_expr
-from arangodb_biochem_importer.parse_gpr import parse_gpr
+from modelseed.utils.flatten_boolean_expr import flatten_expr
+from modelseed.utils.parse_gpr import parse_gpr
 
 
 class TestFlattenBooleanExpression(unittest.TestCase):
