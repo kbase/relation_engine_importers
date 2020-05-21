@@ -25,7 +25,7 @@ def convert_similarities( in_file_path, out_json_file_path):
                         'sf_similarity': float(row[2]),
                         'df_similarity': float(row[3])
                     }
-                    out_j.write( json.dumps(doc) )
+                    out_j.write( json.dumps(doc) + "\n" )
 
 
 if __name__ == '__main__':
