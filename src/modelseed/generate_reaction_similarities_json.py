@@ -43,5 +43,5 @@ if __name__ == '__main__':
     if not os.path.exists( in_file_path ):
         sys.stderr.write('%s does not exist\n' % file_path)
         exit(1)
-    result = convert_similarities( in_file_path, out_json_file_path )
+    convert_similarities( in_file_path, out_json_file_path )
     print('total running time in ms: %d' % (int(time.time() * 1000) - start))

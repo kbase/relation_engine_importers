@@ -15,7 +15,6 @@ import os
 import requests
 import logging
 import argparse
-import json
 import tempfile
 
 chunk_size = 5e8    # in bytes.   set for under 512 Mb limit imposed by ArangoDB
@@ -65,9 +64,6 @@ def bulk_save_post(file_path, col_name, create_collection):
 
     with open( file_path ) as inf:
         for line in inf:
-            #obj = json.loads( line )    # question: why not just go line by line here, and
-            #sobj = json.dumps( obj )    # skip the whole json parsing altogether
-            #osize = len( sobj ) + 1     # +1 for new line
             osize = len( line )
             if current_size + osize > chunk_size:
                 #
