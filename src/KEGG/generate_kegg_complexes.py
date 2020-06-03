@@ -2,7 +2,6 @@
 
 import hashlib
 import json
-from pprint import pprint
 import sys
 import os
 
