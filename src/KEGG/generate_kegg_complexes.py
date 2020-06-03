@@ -59,19 +59,16 @@ def output_json_rxn_gene_within_complex( outfile ):
                                 # Main #
                                 ########
 
-kegg_mapping_file = sys.argv[1]
-output_dir = sys.argv[2]
+if __name__ == '__main__':
 
-read_kegg_mapping( kegg_mapping_file )
+    kegg_mapping_file = sys.argv[1]
+    output_dir = sys.argv[2]
+    
+    read_kegg_mapping( kegg_mapping_file )
+    
+    output_json_rxn_gene_complex( os.path.join( output_dir, 'kegg_rxn_gene_complex.json' ) )
+    output_json_rxn_reaction_within_complex( os.path.join( output_dir, 'kegg_rxn_reaction_within_complex.json' ) )
+    output_json_rxn_gene_within_complex( os.path.join( output_dir, 'kegg_rxn_gene_within_complex.json' ) )
 
-#for r in rxn_table:
-#    print( "{0}: {1}".format( r, len( rxn_table[r] ) ) )
-
-#for g in gene_table:
-#    print( "{0}: {1}".format( g, gene_table[g] ) )
-
-output_json_rxn_gene_complex( os.path.join( output_dir, 'kegg_rxn_gene_complex.json' ) )
-output_json_rxn_reaction_within_complex( os.path.join( output_dir, 'kegg_rxn_reaction_within_complex.json' ) )
-output_json_rxn_gene_within_complex( os.path.join( output_dir, 'kegg_rxn_gene_within_complex.json' ) )
 
 
