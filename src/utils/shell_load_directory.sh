@@ -3,7 +3,7 @@
 #  make sure DB_USER, DB_PASS and DB_URL are properly set as well
 #  as BINDIR. then
 #
-#    python shell_load_directoy.py  JSONdirectory
+#    bash  shell_load_directoy.py  JSONdirectory
 # 
 #  this first loads all rxn_*.json files into collections derived from
 #  the filename, then loads all kegg_rxn_*.json, removing the kegg_
