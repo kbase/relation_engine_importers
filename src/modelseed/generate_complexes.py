@@ -44,6 +44,10 @@ from utils.write_import_file import write_multiple_import_files
 log_file_path = sys.argv[0] + '.log'
 logging.basicConfig(filename=log_file_path, filemode='w', level=logging.DEBUG)
 
+source = "ModelSEED"    # goes into "source" field in rxn_gene_complex
+
+have_gene_key = {}      # hash used to suppress duplicate keys in rxn_gene_complex
+
 _reaction_vert_name = 'rxn_reaction'
 _gene_vert_name = 'ncbi_gene'
 _complex_vert_name = 'rxn_gene_complex'
@@ -80,8 +84,13 @@ def gen_complex_data(row, headers):
         if gene_count == 0:
             continue
         complex_key = hashlib.blake2b(str(cmplx).encode(), digest_size=16).hexdigest()
-        gene_complex = {'genes': cmplx, '_key': complex_key}
-        yield (_complex_vert_name, gene_complex)
+
+        # suppressing yield of duplicate keys
+        if not( complex_key in have_gene_key.keys() ): 
+            gene_complex = {'genes': cmplx, '_key': complex_key, 'source': source}
+            yield (_complex_vert_name, gene_complex)
+        have_gene_key[complex_key] = True
+
         gene_complex_id = _complex_vert_name + '/' + complex_key
         reaction_id = _reaction_vert_name + '/' + reaction['_key']
         reaction_within_complex = {'_from': reaction_id, '_to': gene_complex_id}
