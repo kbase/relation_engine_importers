@@ -5,3 +5,5 @@ __pycache__
 *.pyc
 .vscode/settings.json
 *~
+.*.sw[a-z]
+/relation_engine/taxa/silva/test/data/
