@@ -1,13 +1,12 @@
-from parsers import TaxNode, SILVANodeProvider, SILVAEdgeProvider
-from util.dprint import dprint
+from relation_engine.taxa.silva.parsers import TaxNode, SeqNode, SILVANodeProvider, SILVAEdgeProvider
+from relation_engine.taxa.silva.util.dprint import dprint
 import json
 import os
+import sys
 import unittest
 
 
 cwd = os.path.dirname(os.path.abspath(__file__))
-sample_flnm = 'tax_slv_ssu_138_sample.txt'
-full_flnm = 'tax_slv_ssu_138.txt'
 
 
 class SILVAProviderTest(unittest.TestCase):
@@ -20,15 +19,16 @@ class SILVAProviderTest(unittest.TestCase):
     3. Iterable for edge dicts
     '''
 
-    def _run(self, flpth):
+    def _run(self, input_dir):
         '''
         Parse taxonomy file and get node/edge dicts
         '''
 
-        TaxNode.parse_taxfile(flpth)
+        TaxNode.parse_taxfile(input_dir)
+        SeqNode.parse_fastas(input_dir)
 
-        node_prov = SILVANodeProvider(TaxNode)
-        edge_prov = SILVAEdgeProvider(TaxNode)
+        node_prov = SILVANodeProvider()
+        edge_prov = SILVAEdgeProvider()
 
         nodes = []
         edges = []
@@ -41,7 +41,7 @@ class SILVAProviderTest(unittest.TestCase):
 
         return nodes, edges
 
-    def _check(self, nodes, edges, nodes_flpth, edges_flpth, mode='test'):
+    def _check_superficial(self, nodes, edges, nodes_flpth, edges_flpth, mode='test'):
         '''
         Check resultant node/edge dicts
 
@@ -52,6 +52,15 @@ class SILVAProviderTest(unittest.TestCase):
         * edges_flpth - reference edges written
         * mode - {'write', 'test'}
         '''
+
+        dprint(
+            'nodes',
+            'len(nodes)',
+            'edges',
+            'len(edges)',
+            run=locals(),
+            max_lines=30
+        )
 
         # check uniqueness of `nodes` and `edges`
 
@@ -84,31 +93,32 @@ class SILVAProviderTest(unittest.TestCase):
             raise Exception()
 
 
-    def test_sample(self, mode='test'):
+    @unittest.skip('Temp')
+    def test_sample(self, mode='write'):
         '''
         Test against small sample taxonomy file
         '''
 
-        nodes, edges = self._run(os.path.join(cwd, 'data/sample', sample_flnm))
+        nodes, edges = self._run(os.path.join(cwd, 'data/sample'))
 
         nodes_flpth = os.path.join(cwd, 'data/sample', 'nodes.json')
         edges_flpth = os.path.join(cwd, 'data/sample', 'edges.json')
 
-        self._check(nodes, edges, nodes_flpth, edges_flpth, mode=mode)
+        self._check_superficial(nodes, edges, nodes_flpth, edges_flpth, mode=mode)
 
 
-    def test_SILVA_full(self, mode='test'):
+    def test_SILVA_full(self, mode='write'):
         '''
         Test against full SILVA taxonomy file
         '''
-        nodes, edges = self._run(os.path.join(cwd, 'data/full', full_flnm))
+        nodes, edges = self._run(os.path.join(cwd, 'data/full'))
 
         nodes_flpth = os.path.join(cwd, 'data/full', 'nodes.json')
         edges_flpth = os.path.join(cwd, 'data/full', 'edges.json')
 
-        self._check(nodes, edges, nodes_flpth, edges_flpth, mode=mode)
+        self._check_superficial(nodes, edges, nodes_flpth, edges_flpth, mode=mode)
 
-        # spot checks
+        # spot check taxon nodes
 
         tax_trav = TaxpathTraverser(nodes, edges)
 
@@ -117,47 +127,35 @@ class SILVAProviderTest(unittest.TestCase):
         rank = 'genus'
         release = 138
 
-        tax_trav.traverse_check(taxpath, taxid, rank, release)
+        tax_trav.traverse_check_taxon(taxpath, taxid, rank, release)
 
         taxpath = 'Bacteria;Proteobacteria;Gammaproteobacteria;Gammaproteobacteria Incertae Sedis;Unknown Family;Endothiovibrio;'
         taxid = 26666
         rank = 'genus'
         release = 132
 
-        tax_trav.traverse_check(taxpath, taxid, rank, release)
+        tax_trav.traverse_check_taxon(taxpath, taxid, rank, release)
+
+        # spot check sequence nodes
+
+        id = 'CP020647.3123215.3124757'
+        name = 'Bordetella holmesii'
+        rank = 'sequence'
+        sequence = 'AGAGAUUAAACUGAAGAGUUUGAUCCUGGCUCAGAUUGAACGCUGGCGGGAUGCUUUACACAUGCAAGUCGGACGGCAGCACGGGGCUUCGGCCUGGUGGCGAGUGGCGAACGGGUGAGUAAUGUAUCGGAACGUGCCCGGUAGCGGGGGAUAACUACGCGAAAGCGUGGCUAAUACCGCAUACGCCCUACGGGGGAAAGCGGGGGACCUUCGGGCCUCGCACUAUUGGAGCGGCCGAUAUCGGAUUAGCUAGUUGGUGGGGUAACGGCCUACCAAGGCGACGAUCCGUAGCUGGUUUGAGAGGACGACCAGUCACACUGGGACUGAGACACGGCCCAGACUCCUACGGGAGGCAGCAGUGGGGAAUUUUGGACAAUGGGGGCAACCCUGAUCCAGCCAUCCCGCGUGUGCGAUGAAGGCCUUCGGGUUGUAAAGCACUUUUGGCAGGAAAGAAACGGCACGGGCUAAUAUCCUGUGCAACUGACGGUACCUGCAGAAUAAGCACCGGCUAACUACGUGCCAGCAGCCGCGGUAAUACGUAGGGUGCAAGCGUUAAUCGGAAUUACUGGGCGUAAAGCGUGCGCAGGCGGUUCGGAAAGAAAGAUGUGAAAUCCCAGGGCUUAACCUUGGAACUGCAUUUUUAACUACCGAGCUAGAGUGUGUCAGAGGGAGGUGGAAUUCCGCGUGUAGCAGUGAAAUGCGUAGAUAUGCGGAGGAACACCGAUGGCGAAGGCAGCCUCCUGGGAUAACACUGACGCUCAUGCACGAAAGUGUGGGGAGCAAACAGGAUUAGAUACCCUGGUAGUCCACGCCCUAAACGAUGUCAACUAGCUGUUGGGGCCUUCGGGCCUUGGUAGCGCAGCUAACGCGUGAAGUUGACCGCCUGGGGAGUACGGUCGCAAGAUUAAAACUCAAAGGAAUUGACGGGGACCCGCACAAGCGGUGGAUGAUGUGGAUUAAUUCGAUGCAACGCGAAAAACCUUACCUACCCUUGACAUGUCUGGAAUCCCGAAGAGAUUUGGGAGUGCUCGCAAGAGAACCGGAACACAGGUGCUGCAUGGCUGUCGUCAGCUCGUGUCGUGAGAUGUUGGGUUAAGUCCCGCAACGAGCGCAACCCUUGUCAUUAGUUGCUACGAAAGGGCACUCUAAUGAGACUGCCGGUGACAAACCGGAGGAAGGUGGGGAUGACGUCAAGUCCUCAUGGCCCUUAUGGGUAGGGCUUCACACGUCAUACAAUGGUCGGGACAGAGGGUUGCCAACCCGCGAGGGGGAGCCAAUCCCAGAAACCCGGUCGUAGUCCGGAUCGCAGUCUGCAACUCGACUGCGUGAAGUCGGAAUCGCUAGUAAUCGCGGAUCAGCAUGUCGCGGUGAAUACGUUCCCGGGUCUUGUACACACCGCCCGUCACACCAUGGGAGUGGGUUUUACCAGAAGUAGUUAGCCUAACCGCAAGGGGGGCGAUUACCACGGUAGGAUUCAUGACUGGGGUGAAGUCGUAACAAGGUAGCCGUAUCGGAAGGUGCGGCUGGAUCACCUCCUUUAAGA'
+        datasets = ['ref', 'nr99']
+        taxpath = 'Bacteria;Proteobacteria;Gammaproteobacteria;Burkholderiales;Alcaligenaceae;Bordetella;'
+
+        tax_trav.traverse_check_sequence(id, name, rank, sequence, datasets, taxpath)
 
 
-    def test_url_input(self, mode='test'):
-        '''
-        Test inputting the SILVA taxonomy file download URL
-        '''
-        nodes, edges = self._run(
-            'https://www.arb-silva.de/fileadmin/silva_databases/release_138/Exports/taxonomy/tax_slv_ssu_138.txt.gz',
-            compression='gzip'
-        )
-        nodes_flpth = os.path.join(cwd, 'data/full', 'nodes.json')
-        edges_flpth = os.path.join(cwd, 'data/full', 'edges.json')
+        id = 'HM112903.1.1368'
+        name = 'uncultured beta proteobacterium'
+        rank = 'sequence'
+        sequence = 'GAUUGAACGCUGGCGGCAUGCCUUACACAUGCAAGUCGAACGGCAGCACGGGUGCUUGCACCUGGUGGCGAGUGGCGAACGGGUGAGUAAUACAUCGGAACAUGUCCUGUAGUGGGGGAUAGCCCGGCGAAAGCCGGAUUAAUACCGCAUACGAUCUACGGAUGAAAGCGGGGGACCUUCGGGCCUCGCGCUAUAGGGUUGGCCGAUGGCUGAUUAGCUAGUUGGUGGGGUAAAGGCCUACCAAGGCGACGAUCAGUAGCUGGUCUGAGAGGACGACCAGCCACACUGGGACUGAGACACGGCCCAGACUCCUACGGGAGGCAGCAGUGGGGAAUUUUGGACAAUGGGCGAAAGCCUGAUCCAGCAAUGCCGCGUGUGUGAAGAAGGCCUUCGGGUUGUAAAGCACUUUUGUCCGGAAAGAAAUCCUUGGCUCUAAUACAGUCGGGGGAUGACGGUACCGGAAGAAUAAGCACCGGCUAACUACGUGCCAGCAGCCGCGGUAAUACGUAGGGUGCGAGCGUUAAUCGGAAUUACUGGGCGUAAAGCGUGCGCAGGCGGUUUGCUAAGACCGAUGUGAAAUCCCCGGGCUCAACCUGGGAACUGCAUUGGUGACUGGCAGGCUAGAGUAUGGCAGAGGGGGGUAGAAUUCCACGUGUAGCAGUGAAAUGCGUAGAGAUGUGGAGGAAUACCGAUGGCGAAGGCAGCCCCCUGGGCCAAUACUGACGCUCAUGCACGAAAGCGUGGGGAGCAAACAGGAUUAGAUACCCUGGUAGUCCACGCCCUAAACGAUGUCAACUAGUUGUUGGGGAUUCAUUUCCUUAGUAACGUAGCUAACGCGUGAAGUUGACCGCCUGGGGAGUACGGUCGCAAGAUUAAAACUCAAGGGAAUUGACGGGGACCCGCACAAGCGGUGGAUGAUGUGGAUUAAUUCGAUGCAACGCGAAAAACCUUACCUACCCUUGACAUGGUCGGAAUCCUGCUGAGAGGCGGGAGUGCUCGAAAGAGAACCGGCGCACAGGUGCUGCAUGGCUGUCGUCAGCUCGUGUCGUGAGAUGUUGGGUUAAGUCCCGCAACGAGCGCAACCCUUGUCCUUAGUUGCUACGCAAGAGCACUCUAAGGAGACUGCCGGUGACAAACCGGAGGAAGGUGGGGAUGACGUCAAGUCCUCAUGGCCCUUAUGGGUAGGGCUUCACACGUCAUACAAUGGUCGGAACAGAGGGUUGCCAACCCGCGAGGGGGAGCUAAUCCCAGAAAACCGAUCGUAGUCCGGAUUGCACUCUGCAACUCGAGUGCAUGAAGCUGGAAUCGCUAGUAAUCGCGGAUCAGCAUGCCGCGGUGAAUACGUUCCCGGGUCUUGUACACACCGCC'
+        datasets = ['ref']
+        taxpath = 'Bacteria;Proteobacteria;Gammaproteobacteria;Burkholderiales;Burkholderiaceae;Burkholderia-Caballeronia-Paraburkholderia;'
 
-        self._check(nodes, edges, nodes_flpth, edges_flpth, mode=mode)
-
-        # spot checks
-
-        tax_trav = TaxpathTraverser(nodes, edges)
-
-        taxpath = 'Bacteria;Desulfobacterota;Thermodesulfobacteria;Thermodesulfobacteriales;Thermodesulfobacteriaceae;Geothermobacterium;'
-        taxid = 45081
-        rank = 'genus'
-        release = 138
-
-        tax_trav.traverse_check(taxpath, taxid, rank, release)
-
-        taxpath = 'Bacteria;Proteobacteria;Gammaproteobacteria;Gammaproteobacteria Incertae Sedis;Unknown Family;Endothiovibrio;'
-        taxid = 26666
-        rank = 'genus'
-        release = 132
-
-        tax_trav.traverse_check(taxpath, taxid, rank, release)
-
+        tax_trav.traverse_check_sequence(id, name, rank, sequence, datasets, taxpath)
 
     def shortDescription(self):
         '''Override unittest using test*() docstrings in lieu of test*() method name in output summary'''
@@ -174,20 +172,31 @@ class TaxpathTraverser:
         self.nodes = nodes
         self.edges = edges
 
-    def tax_to_node(self, name, taxid, rank, release):
+    def _info_to_node(self, id: str, name: str, rank: str, release=None, sequence=None, datasets=None):
         '''
         Inputs from taxonomy file
         Find corresponding `node` from SILVA node provider
         '''
-        for node in self.nodes:
-            if (node['id'] == taxid and
-                node['name'] == name and
-                node['rank'] == rank and
-                node['release'] == release):
-                return node
-        raise Exception()
+        if id.isnumeric():
+            print('numeric')
+            for node in self.nodes:
+                if (node['id'] == id and
+                    node['name'] == name and
+                    node['rank'] == rank and
+                    node['release'] == release):
+                    return node
+        else:
+            for node in self.nodes:
+                if (node['id'] == id and
+                    node['name'] == name and
+                    node['rank'] == rank and
+                    node['sequence'] == sequence): # TODO add datasets when do all
+                    return node
 
-    def node_to_edge(self, node: dict):
+        raise Exception(
+            f"id={id}, name={name}, rank={rank}, release={release}, sequence={sequence}, datasets={datasets}")
+
+    def _node_to_edge(self, node: dict):
         '''
         Get outgoing edge from node
 
@@ -199,28 +208,49 @@ class TaxpathTraverser:
                 return edge
         raise Exception()
 
-    def edge_to_node(self, edge: dict):
+    def _edge_to_node(self, edge: dict):
         '''
         Get child node from edge
 
         `edge` is from SILVAEdgeProvider
         '''
-        taxid = edge['to']
+        id = edge['to']
         for node in self.nodes:
-            if taxid == node['id']:
+            if id == node['id']:
                 return node
-        raise Exception()
+        raise Exception(str(edge))
+
+    def traverse_check_sequence(self, id, name, rank, sequence, datasets, taxpath):
+        '''
+        '''
+        tax_l = taxpath.split(';')[:-1]
+
+        node = self._info_to_node(id, name, rank, sequence=sequence, datasets=datasets)
+
+        for tax in tax_l[::-1]: # go backwards
+
+            edge = self._node_to_edge(node)
+            node = self._edge_to_node(edge)
+
+            self.assertTrue(node['name'] == tax, f"`node['name']` is {node['name']}, `tax` is {tax}")
+
+        print('Done traversing %s' % taxpath)
     
-    def traverse_check(self, taxpath, taxid, rank, release):
+    def traverse_check_taxon(self, taxpath, taxid, rank, release):
+        '''
+        Given info of taxon node,
+        traverse up its path through provided nodes/edges
+        making sure those match the taxonomy in the taxon node
+        '''
 
         tax_l = taxpath.split(';')[:-1] # semicolon-terminated
 
-        node = self.tax_to_node(tax_l[-1], taxid, rank, release) # locate `node` corresponding to lowest taxon
+        node = self._info_to_node(str(taxid), tax_l[-1], rank, release=release) # locate `node` corresponding to lowest taxon
 
         for tax in tax_l[:-1][::-1]: # go backwards from second-to-last
 
-            edge = self.node_to_edge(node)
-            node = self.edge_to_node(edge)
+            edge = self._node_to_edge(node)
+            node = self._edge_to_node(edge)
 
             self.assertTrue(node['name'] == tax, f"`node['name']` is {node['name']}, `tax` is {tax}")
 

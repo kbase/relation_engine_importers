@@ -6,7 +6,7 @@ import argparse
 import getpass
 from arango import ArangoClient
 
-from relation_engine.taxa.silva.parsers import SILVANodeProvider, SILVAEdgeProvider, TaxNode
+from relation_engine.taxa.silva.parsers import SILVANodeProvider, SILVAEdgeProvider, TaxNode, SeqNode
 from relation_engine.batchload.delta_load import load_graph_delta
 from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTravellingDB
 
@@ -19,14 +19,18 @@ Load a SILVA SSU taxonomy file into an ArangoDB time travelling database, calcul
 changes between the prior load and the current load, and retaining the prior load.
 """.strip())
     parser.add_argument(
-        '--file', 
+        '--input-dir',
         required=True,
-        help='the SILVA SSU taxonomy file, e.g. tax_slv_ssu_138.txt, which is available at ' +
-        'https://www.arb-silva.de/no_cache/download/archive/release_138/Exports/')
+        help='the directory containing SILVA 138 SSU taxonomy and sequence files, i.e., '
+        'tax_slv_ssu_138.txt, SILVA_138_SSUParc_tax_silva.fasta, SILVA_138_SSURef_tax_silva.fasta, '
+        'and SILVA_138_SSURef_NR99_tax_silva.fasta, which are available at ' +
+        'https://www.arb-silva.de/no_cache/download/archive/release_138/Exports/. These are '
+        'the taxonomy file, Parc sequence dataset, Ref seqeuence dataset, and Ref NR99 '
+        'sequence dataset, respectively')
     parser.add_argument(
         '--arango-url',
         required=True,
-        help='The url of the ArangoDB server (e.g. http://localhost:8528')
+        help='The url of the ArangoDB server (e.g. http://localhost:8528)')
     parser.add_argument(
         '--database',
         required=True,
@@ -77,28 +81,29 @@ changes between the prior load and the current load, and retaining the prior loa
 
 def main():
     a = parse_args()
-    client = ArangoClient(hosts=a.arango_url); print('made arango client')
+    client = ArangoClient(hosts=a.arango_url)
     if a.user:
         if a.pwd_file:
             with open(a.pwd_file) as pwd_file:
                 pwd = pwd_file.read().strip()
         else:
             pwd = getpass.getpass()
-        db = client.db(a.database, a.user, pwd, verify=True); print('got client db')
+        db = client.db(a.database, a.user, pwd, verify=True)
     else:
         db = client.db(a.database, verify=True)
     attdb = ArangoBatchTimeTravellingDB(
         db,
         a.load_registry_collection,
         a.node_collection,
-        default_edge_collection=a.edge_collection); print('instantiated attdb')
+        default_edge_collection=a.edge_collection)
 
-    TaxNode.parse_taxfile(a.file)
-    nodeprov = SILVANodeProvider(TaxNode)
-    edgeprov = SILVAEdgeProvider(TaxNode); print('got node/edge provs')
+    TaxNode.parse_taxfile(a.input_dir)
+    SeqNode.parse_fastas(a.input_dir)
+    nodeprov = SILVANodeProvider()
+    edgeprov = SILVAEdgeProvider(); print('got node/edge providers')
 
     load_graph_delta(_LOAD_NAMESPACE, nodeprov, edgeprov, attdb,
-                     a.load_timestamp, a.release_timestamp, a.load_version) ; print('loaded')
+                     a.load_timestamp, a.release_timestamp, a.load_version)
 
 
 if __name__ == '__main__':

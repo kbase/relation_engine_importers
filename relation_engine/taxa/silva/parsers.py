@@ -12,6 +12,7 @@ import numpy as np
 import logging
 from Bio import SeqIO
 import os
+import time
 
 from relation_engine.taxa.silva.util.dprint import dprint
 
@@ -27,51 +28,57 @@ ROOT_TAXID = 0 # SILVA does not set this, so arbitrarily chosen (0 not taken)
 
 
 class SILVANodeProvider:
-
-    def __init__(self, taxnode_cls, seqnode_cls):
-        self.taxnode_cls = taxnode_cls
-        self.seqnode_cls = seqnode_cls
+    '''
+    Required: id, name rank
+    '''
 
     def __iter__(self):
-        for taxnode in self.taxnode_cls.instances.values():
-            yield {
+        for taxnode in TaxNode.instances.values():
+            node = {
                 'id': str(taxnode.taxid),
                 'name': taxnode.name,
                 'rank': taxnode.rank,
-                'release': taxnode.release,
             }
-        for seqnode in self.seqnode_cls.instances.values():
+
+            # Root, Archaea, etc. don't have release
+            if taxnode.release is not None:
+                node['release'] = taxnode.release
+
+            yield(node)
+            
+        for seqnode in SeqNode.instances.values():
             yield {
                 'id': seqnode.id,
                 'name': seqnode.organism_name,
                 'rank': 'sequence',
                 'sequence': seqnode.seq,
-                'dataset': seqnode.dataset,
+                'datasets': seqnode.datasets,
             }
 
 
 class SILVAEdgeProvider:
 
-    def __init__(self, taxnode_cls, seqnode_cls):
-        self.taxnode_cls = taxnode_cls
-        self.seqnode_cls = seqnode_cls
-
     def __iter__(self):
-        for taxnode in self.taxnode_cls.instances.values():
+        for taxnode in TaxNode.instances.values():
             if taxnode.parent is not None:
                 yield {
                     'id': str(taxnode.taxid),
                     'from': str(taxnode.taxid),
                     'to': str(taxnode.parent.taxid),
                 }
-        for seqnode in self.seqnode_cls.instances.values():
+        for seqnode in SeqNode.instances.values():
             yield {
-                'id': str(seqnode.id),
-                'from': str(seqnode.id),
-                'to': str(seqnode.taxpath),
+                'id': seqnode.id,
+                'from': seqnode.id,
+                'to': str(TaxNode.instances[seqnode.taxpath].taxid),
             }
 
-class SequenceNode:
+do_parc = True
+do_ref = True 
+do_nr99 = True
+do_check_assumptions = False
+
+class SeqNode:
 
     instances = dict()
 
@@ -91,19 +98,67 @@ class SequenceNode:
         self.taxpath = taxpath
         self.organism_name = organism_name
         self.seq = seq
-        self.dataset = [dataset]
+        self.datasets = [dataset]
 
         if id in self.instances:
             assert self == self.instances[id]
-            self.instances[id].dataset.append(dataset)
+            self.instances[id].datasets.append(dataset)
         else:
             self.instances[id] = self
 
+
+    # TODO are taxids in acc_taxid/taxmap different from taxfile taxids? what about the rest of the info?
+    
     @classmethod
-    def _check(cls):
-        '''
-        Check assumptions
-        '''
+    def parse_fastas(cls, dir):
+       
+        cls.instances.clear()
+
+        parc_fasta_flpth = os.path.join(dir, 'SILVA_138_SSUParc_tax_silva.fasta')
+        ref_fasta_flpth = os.path.join(dir, 'SILVA_138_SSURef_tax_silva.fasta')
+        nr99_fasta_flpth = os.path.join(dir, 'SILVA_138_SSURef_NR99_tax_silva.fasta')
+
+        def add_node(record, dataset):
+            acs, start, stop = record.name.split('.')
+            taxpath = ';'.join(record.description.split(' ', 1)[1].split(';')[:-1]) + ';'
+            organism_name = record.description.split(' ', 1)[1].split(';')[-1]
+            seq = str(record.seq)
+    
+            cls(acs, start, stop, taxpath, organism_name, seq, dataset)
+
+        if do_parc:
+            logging.info('Parsing %s' % parc_fasta_flpth)
+            t0 = time.time()
+
+            for i, record in enumerate(SeqIO.parse(parc_fasta_flpth, 'fasta')):    
+                add_node(record, 'parc')
+
+            logging.info('Parsed %d records. Took %.2fmin' % ((i + 1), (time.time() - t0) / 60))           
+
+        if do_ref:
+            logging.info('Parsing %s' % ref_fasta_flpth)
+            t0 = time.time()
+
+            for i, record in enumerate(SeqIO.parse(ref_fasta_flpth, 'fasta')):    
+                add_node(record, 'ref')
+
+            logging.info('Parsed %d records. Took %.2fmin' % ((i + 1), (time.time() - t0) / 60))           
+
+        if do_nr99:
+            logging.info('Parsing %s' % nr99_fasta_flpth)
+            t0 = time.time()
+
+            for i, record in enumerate(SeqIO.parse(nr99_fasta_flpth, 'fasta')): 
+                add_node(record, 'nr99')
+                
+            logging.info('Parsed %d records. Took %.2fmin' % ((i + 1), (time.time() - t0) / 60))           
+
+        if do_check_assumptions and do_ref and do_nr99:
+            cls._check_assumptions()
+
+    @classmethod
+    def _check_assumptions(cls):
+
         # expected num ref and nr99
 
         NUM_NR99 = 510984
@@ -167,39 +222,6 @@ class SequenceNode:
 
 
 
-    # TODO are taxids in acc_taxid/taxmap different from taxfile taxids? what about the rest of the info?
-    
-    @classmethod
-    def parse_fastas(cls,
-                     parc_fasta_flpth='SILVA_138_SSUParc_tax_silva.fasta',
-                     ref_fasta_flpth='SILVA_138_SSURef_tax_silva.fasta', 
-                     nr99_fasta_flpth='SILVA_138_SSURef_NR99_tax_silva.fasta'):
-        
-        cls.instances.clear()
-
-
-        def add_node(record, dataset):
-            acs, start, stop = record.name.split('.')
-            taxpath = ';'.join(record.description.split(' ', 1)[1].split(';')[:-1]) + ';'
-            organism_name = record.description.split(' ', 1)[1].split(';')[-1]
-            seq = str(record.seq)
-    
-            cls(acs, start, stop, taxpath, organism_name, seq, dataset)
-
-        logging.info('Parsing %s' % ref_fasta_flpth)
-
-        for i, record in enumerate(SeqIO.parse(ref_fasta_flpth, 'fasta')):    
-            add_node(record, 'ref')
-
-        logging.info('Parsed %d records' % (i + 1))
-        logging.info('Parsing %s' % ref_fasta_flpth)
-
-        for i, record in enumerate(SeqIO.parse(nr99_fasta_flpth, 'fasta')): 
-            add_node(record, 'nr99')
-            
-        logging.info('Parsed %d records' % (i + 1))
-
-
     def __eq__(self, other):
         '''
         Check if all fields, except `dataset`, equal
@@ -213,7 +235,6 @@ class SequenceNode:
             self.organism_name == other.organism_name and
             self.seq == other.seq
         )
-
 
 
 class TaxNode:
@@ -283,13 +304,10 @@ class TaxNode:
             raise Exception()
 
     @staticmethod
-    def parse_taxfile(flpth='tax_slv_ssu_138.txt', compression=None):
-        '''
-        Parse taxonomy file
+    def parse_taxfile(dir):
 
-        Input
-        * flpth - SILVA taxonomy file
-        '''
+        flpth = os.path.join(dir, 'tax_slv_ssu_138.txt')
+
         TaxNode.clear() # TaxNode keeps static list of instances. clear before each taxfile
 
         logging.info('Parsing taxonomy file %s' % flpth)
@@ -298,8 +316,7 @@ class TaxNode:
             flpth, 
             sep='\t', 
             names=['path', 'taxid', 'rank', 'remark', 'release'], 
-            index_col=False,
-            compression=compression)
+            index_col=False)
 
         dprint("set(df['rank'].tolist())",
             "sorted(df['taxid'].tolist())[:30]",
@@ -326,6 +343,8 @@ class TaxNode:
 
         assert len(set(TaxNode.taxids)) == len(TaxNode.taxids), list(zip(sorted(set(TaxNode.taxids)), sorted(TaxNode.taxids)))
 
+        # there are external tests for taxonomy nodes
+
         return df
        
 
@@ -337,7 +356,8 @@ class TaxNode:
         cls.taxids = []
 
 
-def discrete_hist(l, cutoff=10):
+def discrete_hist(l, cutoff=10, max=100):
+
     '''
     Return dict with elements in l as keys, counts as values, sorted by highest count
     Drop low cts
@@ -350,23 +370,23 @@ def discrete_hist(l, cutoff=10):
         else:
             d[e] += 1
 
-    d = {k: v for k, v in sorted(d.items(), key=lambda item: item[1], reverse=True) if v > cutoff} # sort by dict value
-                                                                                    #filter 
+    d = {
+        k: v 
+        for i, (k, v) in enumerate(sorted(d.items(), key=lambda item: item[1], reverse=True)) 
+        if (max is None or i < max) and v > cutoff
+    } 
     
     return d
 
 
 def main():
     cwd = os.path.dirname(os.path.abspath(__file__))
-    taxfile_flpth = os.path.join(cwd, 'test/data/full/tax_slv_ssu_138.txt')
-    parc_fasta_flpth = os.path.join(cwd, 'test/data/full/SILVA_138_Parc_tax_silva.fasta')
-    ref_fasta_flpth = os.path.join(cwd, 'test/data/full/SILVA_138_SSURef_tax_silva.fasta')
-    nr99_fasta_flpth = os.path.join(cwd, 'test/data/full/SILVA_138_SSURef_NR99_tax_silva.fasta')
+    input_dir = os.path.join(cwd, 'test/data/full')
+    
+    TaxNode.parse_taxfile(input_dir) 
+    SeqNode.parse_fastas(input_dir)
 
-    TaxNode.parse_taxfile(taxfile_flpth) # there are tests for this
-    SequenceNode.parse_fastas(parc_fasta_flpth, ref_fasta_flpth, nr99_fasta_flpth)
-
-    SequenceNode._check()
+    SeqNode._check_assumptions()
 
 if __name__ == '__main__':
 
