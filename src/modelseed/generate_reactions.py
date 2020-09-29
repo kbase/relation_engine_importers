@@ -50,6 +50,7 @@ def gen_reaction(row, headers):
         reaction[headers[idx]] = col
     if "_key" not in reaction:
         return
+    reaction['id'] = reaction['_key']
     yield reaction
 
 
