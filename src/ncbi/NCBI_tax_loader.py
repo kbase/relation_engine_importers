@@ -105,9 +105,9 @@ with open(os.path.join(dirname, "nodes.dmp")) as f:
 # (https://github.com/kbase/relation_engine_api)
 
 
-def write_json_from_list(filename, l):
+def write_json_from_list(filename, lines):
     with open(filename, "w") as out:
-        for r in l:
+        for r in lines:
             out.write(json.dumps(r) + "\n")
     print("written: {0}".format(filename))
 

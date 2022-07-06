@@ -8,18 +8,20 @@ env:
     - ARANGODB_VER=3.5.0 ARANGODB_V=35
 
 install:
+  - python --version
   - export ARANGO_FILE=arangodb3-linux-$ARANGODB_VER.tar.gz
   - wget https://download.arangodb.com/arangodb$ARANGODB_V/Community/Linux/$ARANGO_FILE
   - tar xfz $ARANGO_FILE
   - export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
   - export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
 
-  - pip install pipenv coverage pytest-cov python-coveralls flake8
+  # TODO move everything except pipenv to Pipfile dev section
+  - pip install pipenv coverage pytest-cov python-coveralls
   - pipenv install
  
 script:
-# TODO FLAKE8 lots of errors. Need to be fixed, but later
-#  - flake8 src
+# TODO change to make test
+s  - flake8 src
   - mkdir arangodata
   - $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
   - export PYTHONPATH=$(pwd):$(pwd)/src; pytest --verbose --cov=. .

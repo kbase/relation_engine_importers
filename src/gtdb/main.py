@@ -25,8 +25,8 @@ _TAXA_TYPES = {
 def bac_taxonomy_to_json(tsv_path):
     path = tsv_path
     release = path.strip('.tsv')
-    gtdb_vertices_path = f'gtdb_taxon.json'
-    gtdb_edges_path = f'gtdb_child_of_taxon.json'
+    gtdb_vertices_path = 'gtdb_taxon.json'
+    gtdb_edges_path = 'gtdb_child_of_taxon.json'
     gtdb_vertices_output = open(gtdb_vertices_path, 'a')
     gtdb_edges_output = open(gtdb_edges_path, 'a')
     # Raw data input

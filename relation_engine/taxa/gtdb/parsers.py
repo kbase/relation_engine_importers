@@ -37,13 +37,13 @@ class GTDBNodeProvider:
         for line in self._fh:
             accession, lineage = line.strip().split('\t')
             lineage = _get_lineage(lineage)
-            for l in lineage:
-                l_id = _taxon_to_id(l)
+            for lin in lineage:
+                l_id = _taxon_to_id(lin)
                 if l_id not in seen_taxa:
                     yield {
                         'id': l_id,
-                        'rank': _TAXA_TYPES[l['abbrev']],
-                        'name': l['name']
+                        'rank': _TAXA_TYPES[lin['abbrev']],
+                        'name': lin['name']
                     }
                 seen_taxa.add(l_id)
             yield {

@@ -250,7 +250,7 @@ class ArangoBatchTimeTravellingDB:
 
         try:
             self._database.aql.execute(
-                f'INSERT @d in @@col',
+                'INSERT @d in @@col',
                 bind_vars={'d': doc, '@col': self._registry_collection.name}
             )
         except _AQLQueryExecuteError as e:
@@ -273,7 +273,7 @@ class ArangoBatchTimeTravellingDB:
 
         try:
             self._database.aql.execute(
-                f'UPDATE @d in @@col',
+                'UPDATE @d in @@col',
                 bind_vars={'d': doc, '@col': self._registry_collection.name}
             )
         except _AQLQueryExecuteError as e:
@@ -294,7 +294,7 @@ class ArangoBatchTimeTravellingDB:
 
         try:
             self._database.aql.execute(
-                f'UPDATE @d in @@col',
+                'UPDATE @d in @@col',
                 bind_vars={'d': doc, '@col': self._registry_collection.name}
             )
         # could combine some of this code with the above method... meh

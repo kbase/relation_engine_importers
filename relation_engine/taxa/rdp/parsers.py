@@ -48,16 +48,16 @@ class RDPNodeProvider:
             lineage, unclassified = _get_lineage(lineage)
             if not lineage:  # it's an outgroup
                 continue
-            for l in lineage:
-                l_id = _taxon_to_id(l)
+            for lin in lineage:
+                l_id = _taxon_to_id(lin)
                 if l_id not in seen_taxa:
                     yield {
                         'id': l_id.replace('/', '_'),
-                        'rank': l['rank'],
-                        'name': l['name'],
+                        'rank': lin['rank'],
+                        'name': lin['name'],
                         'unclassified': False,
                         'molecule': None,
-                        _INCERTAE_SEDIS: l[_INCERTAE_SEDIS]
+                        _INCERTAE_SEDIS: lin[_INCERTAE_SEDIS]
                     }
                 seen_taxa.add(l_id)
             yield {
