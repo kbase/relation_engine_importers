@@ -23,6 +23,8 @@ jobs:
     - name: Check out GitHub repo
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 2  # codecov complains if fetch-depth == 1, which is the default
 
     - name: Set up test environment
       if: "!contains(github.event.head_commit.message, 'skip ci')"
