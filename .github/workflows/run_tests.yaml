@@ -49,12 +49,16 @@ jobs:
         export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
         PYTHONPATH=$(pwd):$(pwd)/src pipenv run pytest --verbose --cov=. .
+        pwd
+        ls
         $ARANGO stop
     - name: Upload coverage
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
       run: |
         # codecov https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
+        pwd
+        ls
         curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
         curl -Os https://uploader.codecov.io/latest/linux/codecov
         curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
