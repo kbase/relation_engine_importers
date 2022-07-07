@@ -9,6 +9,7 @@ env:
 
 install:
   - python --version
+  - which python
   - export ARANGO_FILE=arangodb3-linux-$ARANGODB_VER.tar.gz
   - wget https://download.arangodb.com/arangodb$ARANGODB_V/Community/Linux/$ARANGO_FILE
   - tar xfz $ARANGO_FILE
