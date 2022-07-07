@@ -1,5 +1,6 @@
 """
-This is a quick & temporary script for loading the Dan Jacobson/ORNL group's gene and phenotype network data into arangodb.
+This is a quick & temporary script for loading the Dan Jacobson/ORNL group's gene and
+phenotype network data into arangodb.
 
 Running this requires a set of source files provided by the ORNL group.
 """

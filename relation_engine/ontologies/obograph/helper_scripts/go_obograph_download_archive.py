@@ -34,9 +34,9 @@ def main():
 
     root = requests.get(GO_RELEASES_URL).text
     # hacky hacky hacky, could be much less fragile, but who cares
-    for l in root.split('\n'):
-        if GO_RELEASES_URL in l and INDEX_HTML in l:
-            date = l.split(GO_RELEASES_URL)[-1].split('/' + INDEX_HTML)[0]
+    for line in root.split('\n'):
+        if GO_RELEASES_URL in line and INDEX_HTML in line:
+            date = line.split(GO_RELEASES_URL)[-1].split('/' + INDEX_HTML)[0]
             download_obograph(a.dir, date)
 
 

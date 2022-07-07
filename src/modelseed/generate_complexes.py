@@ -86,7 +86,7 @@ def gen_complex_data(row, headers):
         complex_key = hashlib.blake2b(str(cmplx).encode(), digest_size=16).hexdigest()
 
         # suppressing yield of duplicate keys
-        if not( complex_key in have_gene_key.keys() ): 
+        if not(complex_key in have_gene_key.keys()):
             gene_complex = {'genes': cmplx, '_key': complex_key, 'source': source}
             yield (_complex_vert_name, gene_complex)
         have_gene_key[complex_key] = True

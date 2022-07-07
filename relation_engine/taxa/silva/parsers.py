@@ -398,7 +398,7 @@ class TaxNode:
         cls.taxids = []
 
 
-def discrete_hist(l, cutoff=10, max=100):
+def discrete_hist(elements, cutoff=10, max=100):
 
     """
     Return dict with elements in l as keys, counts as values, sorted by highest count
@@ -406,7 +406,7 @@ def discrete_hist(l, cutoff=10, max=100):
     """
     d = dict()
 
-    for e in l:
+    for e in elements:
         if e not in d:
             d[e] = 1
         else:
