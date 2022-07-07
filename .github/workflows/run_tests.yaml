@@ -47,7 +47,7 @@ jobs:
         export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
         export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
-        pipenv run export PYTHONPATH=$(pwd):$(pwd)/src; pytest --verbose --cov=. .
+        PYTHONPATH=$(pwd):$(pwd)/src pipenv run pytest --verbose --cov=. .
         $ARANGO stop
     - name: Upload coverage
       if: "!contains(github.event.head_commit.message, 'skip ci')"
