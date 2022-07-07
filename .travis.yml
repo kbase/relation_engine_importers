@@ -16,8 +16,8 @@ install:
   - export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
   - export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
 
-  # TODO move everything except pipenv to Pipfile dev section
-  - pip install pipenv coverage pytest-cov python-coveralls
+  # TODO move everything except pipenv to Pipfile dev section and change to make test
+  - pip install pipenv coverage pytest-cov python-coveralls flake8
   - pipenv install
  
 script:
