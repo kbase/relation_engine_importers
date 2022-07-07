@@ -1,6 +1,6 @@
 sudo: required
 language: python
-python: "3.7"
+python: "3.7.5"
 
 env:
     # TODO add more arango versions when they exist
