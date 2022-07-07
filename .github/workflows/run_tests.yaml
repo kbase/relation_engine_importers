@@ -23,8 +23,6 @@ jobs:
     - name: Check out GitHub repo
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       uses: actions/checkout@v2
-      with:
-        fetch-depth: 2  # codecov complains if fetch-depth == 1, which is the default
 
     - name: Set up test environment
       if: "!contains(github.event.head_commit.message, 'skip ci')"
@@ -52,17 +50,7 @@ jobs:
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
         PYTHONPATH=$(pwd):$(pwd)/src pipenv run pytest --verbose --cov-report term --cov-report xml:cov.xml --cov=. .
         $ARANGO stop
-    - name: Upload coverage
-      if: "!contains(github.event.head_commit.message, 'skip ci')"
-      shell: bash
-      run: |
-        # codecov https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
-        curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
-        curl -Os https://uploader.codecov.io/latest/linux/codecov
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-        gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-        shasum -a 256 -c codecov.SHA256SUM
-        chmod +x codecov
-        ./codecov -f cov.xml
-    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: true
