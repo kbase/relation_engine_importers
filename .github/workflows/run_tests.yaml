@@ -53,7 +53,7 @@ jobs:
     - name: Upload coverage
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
-      run:
+      run: |
         # codecov https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
         curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
         curl -Os https://uploader.codecov.io/latest/linux/codecov
