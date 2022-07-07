@@ -33,8 +33,6 @@ jobs:
         export ARANGO_FILE=arangodb3-linux-$ARANGODB_VER.tar.gz
         wget -nv https://download.arangodb.com/arangodb$ARANGODB_V/Community/Linux/$ARANGO_FILE
         tar xfz $ARANGO_FILE
-        export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
-        export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
 
         # TODO move everything except pipenv to Pipfile dev section and change to make test
         pip install pipenv coverage pytest-cov flake8
@@ -46,6 +44,8 @@ jobs:
         # TODO change to make test
         flake8 .
         mkdir arangodata
+        export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
+        export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
         export PYTHONPATH=$(pwd):$(pwd)/src; pytest --verbose --cov=. .
         $ARANGO stop
