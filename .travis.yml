@@ -26,10 +26,14 @@ script:
   - mkdir arangodata
   - $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
   - export PYTHONPATH=$(pwd):$(pwd)/src; pytest --verbose --cov=. .
+  - pwd
+  - ls
   - $ARANGO stop
 
 after_success:
   # codecov https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
+  - pwd
+  - ls
   - curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
   - curl -Os https://uploader.codecov.io/latest/linux/codecov
   - curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
