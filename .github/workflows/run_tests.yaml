@@ -35,7 +35,7 @@ jobs:
 
         # TODO move everything except pipenv to Pipfile dev section and change to make test
         pip install pipenv
-        pipenv install
+        pipenv install --dev
     - name: Run tests
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
