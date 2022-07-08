@@ -34,20 +34,18 @@ jobs:
         tar xfz $ARANGO_FILE
 
         # TODO move everything except pipenv to Pipfile dev section and change to make test
-        pip install pipenv flake8
+        pip install pipenv
         pipenv install
-        pipenv install --dev coverage pytest-cov
     - name: Run tests
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
       run: |
         # TODO change to make test
-        flake8 .
         mkdir arangodata
         export ARANGO=`pwd`/arangodb3-linux-$ARANGODB_VER/bin/arangodb
         export ARANGOD=`pwd`/arangodb3-linux-$ARANGODB_VER/usr/sbin/arangod
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
-        PYTHONPATH=$(pwd):$(pwd)/src pipenv run pytest --verbose --cov-report term --cov-report xml:cov.xml --cov=. .
+        PYTHONPATH=$(pwd):$(pwd)/src pipenv run make test
         $ARANGO stop
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
