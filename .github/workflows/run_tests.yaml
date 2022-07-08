@@ -10,8 +10,8 @@ jobs:
       matrix:
         python-version: ["3.7"]
     env:
-      ARANGODB_VER: 3.5.0
-      ARANGODB_V: 35
+      ARANGODB_VER: 3.9.1
+      ARANGODB_V: 39
     steps:
 
     - name: Set up Python ${{ matrix.python-version }}
