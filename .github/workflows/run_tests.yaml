@@ -1,7 +1,6 @@
-
 name: Run tests
 
-on: [push, pull_request, fork, workflow_dispatch]
+on: [pull_request, fork, workflow_dispatch]
 
 jobs:
 
