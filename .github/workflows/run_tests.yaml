@@ -44,8 +44,8 @@ jobs:
         # TODO change to make test
         flake8 .
         mkdir arangodata
-        export ARANGO=`pwd`/arangodb3-$ARANGODB_VER/bin/arangodb
-        export ARANGOD=`pwd`/arangodb3-$ARANGODB_VER/usr/sbin/arangod
+        export ARANGO=`pwd`/arangodb3-linux-$ARANGODB_VER/bin/arangodb
+        export ARANGOD=`pwd`/arangodb3-linux-$ARANGODB_VER/usr/sbin/arangod
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
         PYTHONPATH=$(pwd):$(pwd)/src pipenv run pytest --verbose --cov-report term --cov-report xml:cov.xml --cov=. .
         $ARANGO stop
