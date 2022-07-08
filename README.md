@@ -9,7 +9,10 @@ This is an experimental utility that imports various data into an ArangoDB graph
 
 Build status (master):
 [![Build Status](https://travis-ci.org/kbase/relation_engine_importers.svg?branch=master)](https://travis-ci.org/kbase/relation_engine_importers)
-[![Coverage Status](https://coveralls.io/repos/github/kbase/relation_engine_importers/badge.svg)](https://coveralls.io/github/kbase/relation_engine_importers)
+[![codecov](https://codecov.io/gh/kbase/relation_engine_importers/branch/master/graph/badge.svg?token=YUiBQ5QX99)](https://codecov.io/gh/kbase/relation_engine_importers)
+
+NOTE: Coverage only includes files that are at least touched by tests. There are many files that
+have no tests at all, and so the actual coverage of this repo is much lower than reported.
 
 ## Setup
 
