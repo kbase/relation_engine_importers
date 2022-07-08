@@ -21,7 +21,7 @@ Install Python 3.7, preferably using pyenv: https://github.com/pyenv/pyenv
 Then install [pipenv](https://github.com/pypa/pipenv) and run:
 
 ```sh
-pipenv install
+pipenv sync --dev
 ```
 
 ## Running tests
