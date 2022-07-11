@@ -43,7 +43,7 @@ jobs:
         export ARANGO=`pwd`/arangodb3-linux-$ARANGODB_VER/bin/arangodb
         export ARANGOD=`pwd`/arangodb3-linux-$ARANGODB_VER/usr/sbin/arangod
         $ARANGO start --server.arangod=$ARANGOD --starter.mode single --starter.data-dir ./arangodata
-        PYTHONPATH=$(pwd):$(pwd)/src pipenv run make test
+        make test
         $ARANGO stop
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
