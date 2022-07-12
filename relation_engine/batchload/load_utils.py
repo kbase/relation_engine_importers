@@ -41,13 +41,11 @@ def process_nodes(nodeprov, load_version, timestamp, nodes_out):
             'created':        timestamp,
             'expired':        _MAX_ADB_INTEGER
         })
-        nodes_out.write(json.dumps(n2) + '\n')
+        nodes_out.write(json.dumps(n2) + '\n')  # TypeError
 
 
-def process_edge(edge, load_version, timestamp):  # TODO TEST
+def process_edge(edge, load_version, timestamp):
     """
-    Note that this funtion modifies the edge argument in place.
-
     Process a graph edge for a batch time travelling load.
     Adds appropriate fields to the edge.
 
@@ -66,16 +64,17 @@ def process_edge(edge, load_version, timestamp):  # TODO TEST
 
     Returns - the updated edge as a dict.
     """
-    edge.update({
-        '_key':             edge['id'] + '_' + load_version,
-        '_from':            edge['from'] + '_' + load_version,
-        '_to':              edge['to'] + '_' + load_version,
+    edge2 = dict(edge)  # Don't modify the incoming data, TypeError
+    edge2.update({
+        '_key':             edge['id'] + '_' + load_version,  # KeyError, TypeError
+        '_from':            edge['from'] + '_' + load_version,  # KeyError, TypeError
+        '_to':              edge['to'] + '_' + load_version,  # KeyError, TypeError
         'first_version':    load_version,
         'last_version':     load_version,
         'created':          timestamp,
         'expired':          _MAX_ADB_INTEGER,
     })
-    return edge
+    return edge2
 
 
 def process_edges(edgeprov, load_version, timestamp, edges_out):  # TODO TEST

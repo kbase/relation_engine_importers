@@ -1,6 +1,6 @@
 from copy import deepcopy
 from io import StringIO
-from relation_engine.batchload.load_utils import process_nodes
+from relation_engine.batchload.load_utils import process_nodes, process_edge
 
 
 _MAX_ADB_INT = 9007199254740991
@@ -39,6 +39,60 @@ def test_process_nodes():
 
     outfile.seek(0)
     check_json_list_file_contents(expected, outfile)
+
+
+def test_process_edge_minimal():
+    edge = {
+        'id': 'foo',
+        'from': 'yermums',
+        'to': 'thechipshop',
+    }
+    edgecopy = dict(edge)
+    pedge = process_edge(edge, 'loadversion', 42)
+
+    assert edgecopy == edge
+    expected = {
+        'id': 'foo',
+        'from': 'yermums',
+        'to': 'thechipshop',
+        '_key': 'foo_loadversion',
+        '_from': 'yermums_loadversion',
+        '_to': 'thechipshop_loadversion',
+        'first_version': 'loadversion',
+        'last_version': 'loadversion',
+        'created': 42,
+        'expired': _MAX_ADB_INT,
+    }
+    assert expected == pedge
+
+
+def test_process_edge():
+    edge = {
+        'id': 'fad',
+        'from': 'yerdads',
+        'to': 'the_rat_and_grommet',
+        'alright': 'innit',
+        'gorblimey': 'guvnor',
+    }
+    edgecopy = dict(edge)
+    pedge = process_edge(edge, 'this_is_a_version', 84)
+
+    assert edgecopy == edge
+    expected = {
+        'id': 'fad',
+        'from': 'yerdads',
+        'to': 'the_rat_and_grommet',
+        'alright': 'innit',
+        'gorblimey': 'guvnor',
+        '_key': 'fad_this_is_a_version',
+        '_from': 'yerdads_this_is_a_version',
+        '_to': 'the_rat_and_grommet_this_is_a_version',
+        'first_version': 'this_is_a_version',
+        'last_version': 'this_is_a_version',
+        'created': 84,
+        'expired': _MAX_ADB_INT,
+    }
+    assert expected == pedge
 
 
 def check_json_list_file_contents(expected_lines, infile):
