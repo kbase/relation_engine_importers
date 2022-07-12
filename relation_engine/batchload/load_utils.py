@@ -2,41 +2,13 @@
 Utilities for loading graph data into the relation engine.
 """
 
-# TODO TEST
+
+# since this is KBase internal code we can be a bit less compassionate re good
+# error messages, e.g. throwing KeyErrors or TypeErrors vs a more descriptive message.
+# As a result we get slightly less code to maintain and a completely trivial performance boost.
+# And there was much rejoicing.
 
 import json
-import unicodedata
-
-# assumes there's at least one non-whitespace char in string
-
-
-def canonicalize(string, ignore_tokens):
-    """
-    Canonicalizes a string by:
-    Lowercasing
-    Unicode normalization
-    Tokenizing
-    Removing non-alphanumeric characters from each end of each token
-    Ignoring any tokens in the ignore_tokens set
-    """
-    # see https://docs.python.org/3/howto/unicode.html#comparing-strings
-    normed = unicodedata.normalize('NFD', unicodedata.normalize('NFD', string).casefold())
-    # maybe include the full string, but normed, in the returned list?
-    tokens = normed.split()
-    # TODO TEST for fencepost errors here
-    ret = []
-    for t in tokens:
-        for start in range(len(t)):
-            if t[start].isalpha() or t[start].isdigit():
-                break
-        for end in range(len(t) - 1, -1, -1):
-            if t[end].isalpha() or t[end].isdigit():
-                break
-        if start <= end:
-            t = t[start: end + 1]
-            if t not in ignore_tokens:
-                ret.append(t)
-    return ret
 
 
 # TODO CODE this should probably be a parameter? YAGNI for now
@@ -60,18 +32,19 @@ def process_nodes(nodeprov, load_version, timestamp, nodes_out):
     timestamp - the timestamp at which the nodes will begin to exist.
     nodes_out - a handle to the file where the nodes will be written.
     """
-    for n in nodeprov:
-        n.update({
-            '_key':           n['id'] + '_' + load_version,
+    for n in nodeprov:  # TypeError
+        n2 = dict(n)  # Don't modify the incoming data, also TypeError
+        n2.update({
+            '_key':           n['id'] + '_' + load_version,  # KeyError, TypeError
             'first_version':  load_version,
             'last_version':   load_version,
             'created':        timestamp,
             'expired':        _MAX_ADB_INTEGER
         })
-        nodes_out.write(json.dumps(n) + '\n')
+        nodes_out.write(json.dumps(n2) + '\n')
 
 
-def process_edge(edge, load_version, timestamp):
+def process_edge(edge, load_version, timestamp):  # TODO TEST
     """
     Note that this funtion modifies the edge argument in place.
 
@@ -105,7 +78,7 @@ def process_edge(edge, load_version, timestamp):
     return edge
 
 
-def process_edges(edgeprov, load_version, timestamp, edges_out):
+def process_edges(edgeprov, load_version, timestamp, edges_out):  # TODO TEST
     """
     Process graph edges from a provider into a JSON load file for a batch time travelling load.
 
