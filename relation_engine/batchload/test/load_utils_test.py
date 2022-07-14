@@ -1,6 +1,6 @@
 from copy import deepcopy
 from io import StringIO
-from relation_engine.batchload.load_utils import process_nodes, process_edge
+from relation_engine.batchload.load_utils import process_nodes, process_edge, process_edges
 
 
 _MAX_ADB_INT = 9007199254740991
@@ -93,6 +93,48 @@ def test_process_edge():
         'expired': _MAX_ADB_INT,
     }
     assert expected == pedge
+
+
+def test_process_edges_noop():
+    outfile = StringIO()
+    process_edges([], 'ver', 1, outfile)
+    assert outfile.getvalue() == ''
+
+
+def test_process_edges():
+    outfile = StringIO()
+    edges = [
+        {
+            'id': "baz",
+            'from': 'my_happy_place',
+            'to': 'cursed_reality',
+        },
+        {
+            'id': 'bat',
+            'from': 'fryingpan',
+            'to': 'fire',
+            'also_any_other': 'cliches',
+            'you_might_like': 'to_include',
+        }
+    ]
+    edgescopy = deepcopy(edges)
+    process_edges(edges, 'lversion', 126, outfile)
+
+    assert edgescopy == edges
+
+    expected = [
+        '{"id": "baz", "from": "my_happy_place", "to": "cursed_reality", "_key": "baz_lversion", '
+        + '"_from": "my_happy_place_lversion", "_to": "cursed_reality_lversion", '
+        + '"first_version": "lversion", "last_version": "lversion", "created": 126, '
+        + '"expired": 9007199254740991}\n',
+        '{"id": "bat", "from": "fryingpan", "to": "fire", "also_any_other": "cliches", '
+        + '"you_might_like": "to_include", "_key": "bat_lversion", "_from": "fryingpan_lversion", '
+        + '"_to": "fire_lversion", "first_version": "lversion", "last_version": "lversion", '
+        + '"created": 126, "expired": 9007199254740991}\n'
+    ]
+
+    outfile.seek(0)
+    check_json_list_file_contents(expected, outfile)
 
 
 def check_json_list_file_contents(expected_lines, infile):

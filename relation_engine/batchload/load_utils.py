@@ -77,7 +77,7 @@ def process_edge(edge, load_version, timestamp):
     return edge2
 
 
-def process_edges(edgeprov, load_version, timestamp, edges_out):  # TODO TEST
+def process_edges(edgeprov, load_version, timestamp, edges_out):
     """
     Process graph edges from a provider into a JSON load file for a batch time travelling load.
 
@@ -95,6 +95,6 @@ def process_edges(edgeprov, load_version, timestamp, edges_out):  # TODO TEST
     timestamp - the timestamp at which the edges will begin to exist.
     edges_out - a handle to the file where the edges will be written.
     """
-    for e in edgeprov:
+    for e in edgeprov:  # TypeError
         e = process_edge(e, load_version, timestamp)
-        edges_out.write(json.dumps(e) + '\n')
+        edges_out.write(json.dumps(e) + '\n')  # TypeError
