@@ -16,7 +16,7 @@ have no tests at all, and so the actual coverage of this repo is much lower than
 
 ## Setup
 
-Install Python 3.7, preferably using pyenv: https://github.com/pyenv/pyenv
+Install Python 3.10, optionally using pyenv: https://github.com/pyenv/pyenv
 
 Then install [pipenv](https://github.com/pypa/pipenv) and run:
 
@@ -26,12 +26,28 @@ pipenv sync --dev
 
 ## Running tests
 
-To run tests, arangodb must be running locally on the default port with default root credentials. You can run arangodb using docker-compose with `docker-compse up`.
+To run tests, `arangodb` must be running locally on the default port with default root credentials.
+You can run `arangodb` using docker-compose with `docker-compse up`. However, we have found that
+running `arangodb` outside the docker container is ~10x faster for reasons that are currently
+unknown. Assuming a tarball based install with the `bin` directory of the tarball on the path, this
+command line will launch `arangodb` as a daemon using `./temparagodata` as its data directory:
+
+```sh
+arangodb start --server.arangod=arangod --starter.mode single --starter.data-dir ./temparangodata
+```
+
+Note that you may have to increase the maximum open file count for your OS to 8192 in order for
+`arangodb` to start.
 
 Then from the repository root:
 
 ```sh
 make test
+```
+
+To stop arangodb:
+```sh
+arangodb stop
 ```
 
 ## Standard loader usage
