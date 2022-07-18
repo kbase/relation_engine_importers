@@ -14,7 +14,7 @@ continued support.
   exclusively use the delta loader.
   * They are mostly orders of magnitude smaller than the NCBI dataset, in which case loading with
     the delta loader is fast.
-* As of this writing the NCBI delta loader doesn't support release timestamps or registering
+* As of this writing the NCBI bulk loader doesn't support release timestamps or registering
   the data load in the load registry collection and so is out of date and needs fixes.
 
 ## Test environment
@@ -141,3 +141,5 @@ Fri Jul 15 00:54:14 UTC 2022
 
 Note that the bulk loader used 5 threads and the delta loader is currently single threaded,
 which might explain some of the difference.
+
+In the RE tech review meeting on 7/15/22, a decision was made to remove the bulk loader.

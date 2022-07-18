@@ -2,7 +2,7 @@
 
 This document explains the load algorithm KBase uses for loading new versions of graph data
 (at the time of writing, this is targeted towards taxonomy and ontology graphs) as a batch into a
-graph database already containing one or more previous versions of the data.
+graph database possibly containing one or more previous versions of the data.
 
 KBase indends to use ArangoDB for graph queries and so many of the conventions for field names,
 etc., originate there.
@@ -19,7 +19,7 @@ The algorithm is based on
 
 * With the algorithm described, any queries that are performed while a load is in progress
   are not repeatable as the database is in an inconsistent state.
-  * See delta_load_atomicity.md for potential solutions.
+  * See [delta_load_atomicity.md](./delta_load_atomicity.md) for potential solutions.
 
 ## Limitations
 

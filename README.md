@@ -65,24 +65,8 @@ It is expected that users running the loaders are familiar with the data types b
 python programming, and KBase infrastructure. For details on the data processing of each loader,
 consult the corresponding `parsers.py` class.
 
-There are two types of loaders supported in this repo, bulk loaders and delta loaders.
-
-### Bulk loaders
-
-Bulk loaders create load files suitable for importing into ArangoDB using `arangoimport` and are
-used to load the first instance of a graph into the RE.
-
-When loading edges collections, the `--from-collection-prefix` and `--to-collection-prefix`
-arguments must be used to specify the name of the node collection(s) to which the edges connect.
-
-### Delta loaders
-
-After the initial load, delta loaders must be used to compare the next graph instance to the
-prior instance and calculate and apply the difference between the two graphs to the RE.
-
-For small graphs the delta loader can be used to load the first instance of the graph as well,
-but since it will perform numerous unnecessary queries against the database to do the graph
-comparison, the bulk loader is typically faster.
+See [the description of the delta load algorithm](./delta_load_algorithm.md) for details on how
+the loaders operate.
 
 ### Rolling back a load
 
@@ -94,30 +78,25 @@ Use the `--help` option to get instructions for how to use each of the loaders.
 
 #### NCBI Taxonomy Dump Format
 
-Bulk loader: `relation_engine/taxa/ncbi/loaders/ncbi_taxa_bulk_loader.py`  
-Delta loader: `relation_engine/taxa/ncbi/loaders/ncbi_taxa_delta_loader.py`
+`relation_engine/taxa/ncbi/loaders/ncbi_taxa_delta_loader.py`
 
 #### GTDB Taxonomy
 
 Since GTDB does not have stable IDs for nodes, the delta loader may not be able to track nodes
 correctly across loads.
 
-There is no bulk loader.
-Delta loader: `relation_engine/taxa/gtdb/loaders/gtbd_taxa_delta_loader.py`
+`relation_engine/taxa/gtdb/loaders/gtbd_taxa_delta_loader.py`
 
 #### RDP Taxonomy
 
 Since RDP does not have stable IDs for nodes, the delta loader may not be able to track nodes
 correctly across loads.
 
-There is no bulk loader.
-Delta loader: `relation_engine/taxa/rdp/loaders/rdp_taxa_delta_loadery.py`
+`relation_engine/taxa/rdp/loaders/rdp_taxa_delta_loadery.py`
 
 #### OBOGraph Ontology JSON Format
 
-There is no bulk loader as ontologies are small enough that an initial load is usually very
-fast even with the delta loader.  
-Delta loader: `relation_engine/ontologies/obograph/loaders/obograph_delta_loader.py`
+`relation_engine/ontologies/obograph/loaders/obograph_delta_loader.py`
 
 The loader has been used to load GO and ENVO ontologies.
 
@@ -130,8 +109,8 @@ The loader has been used to load GO and ENVO ontologies.
 
 ### Creating new loaders
 
-Loaders for NCBI taxonomy are supplied in `relation_engine/ncbi/taxa/loaders` and can be examined
-as examples.
+A loader for NCBI taxonomy is supplied in `relation_engine/ncbi/taxa/loaders` and can be examined
+as an example.
 
 To create a new loader, at minimum an edge provider, a node provider, and a CLI must be
 created.
@@ -181,22 +160,8 @@ overlap for nodes in separate loads.
 #### CLI
 
 The CLI code takes user arguments (such as the load version and timestamp) and puts all the parts
-together to get the load to proceed. There are working implementations in
-`relation_engine/ncbi/taxa/loaders`.
+together to get the load to proceed.
 
-For a bulk loader:
-* There is a working implementation at `relation_engine/ncbi/taxa/loaders/ncbi_taxa_bulk_loader.py`
-* Create the node and edge providers
-  * This will depend on the implementation of the providers
-* Call `process_nodes` in `relation_engine/batchload/load_utils.py` to create a JSON file
-  containing nodes suitable for import via `arangoimport`.
-* Call `process_edges` in the same file to create an edge JSON file.
-  * Alternatively, if edges are to be loaded into more than one collection, the `process_edge`
-    function may be used to process edges individually. The CLI can then determine into which
-    file the edge is to be written. There is an example in
-    `relation_engine/ncbi/test/ncbi_taxa_bulk_loader_multiple_edges.py`.
-
-For a delta loader:
 * There is a working implementation at
   `relation_engine/ncbi/taxa/loaders/ncbi_taxa_delta_loader.py`
 * Create the node and edge providers.
