@@ -1,0 +1,56 @@
+# From https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7408187/#sup1, table S3
+# Equivalent terms are presented as <name>-<equivalent term> after the name when provided *if
+# they appear in the NCBI taxa node dump as of 2022-07-01*
+# Non-hierarchical ranks are ordered first (first 4)
+# The non-hierarchical rank of "unclassified <name>" is omitted and does not occur in the node
+# dumps as of 2022-07-01
+
+clade
+environmental samples
+incertae sedis
+no rank
+superkingdom
+kingdom
+subkingdom
+superphylum
+phylum
+subphylum
+infraphylum
+superclass
+class
+subclass
+infraclass
+cohort
+subcohort
+superorder
+order
+suborder
+infraorder
+parvorder
+superfamily
+family
+subfamily
+tribe
+subtribe
+genus
+subgenus
+section
+subsection
+series
+subseries
+species group
+species subgroup
+species
+forma specialis
+subspecies
+varietas
+varietas-morph
+subvariety
+forma
+serogroup
+serogroup-pathogroup
+serotype
+serotype-biotype
+serotype-genotype
+strain
+isolate
