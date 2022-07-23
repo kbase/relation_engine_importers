@@ -18,13 +18,13 @@
 * The original RE scientific name lookup query allowed specifying the ranks of interest, as well
   as whether strains (e.g. flagged `no rank` nodes) should be included:
   * [taxonomy_search_sci_name](https://github.com/kbase/relation_engine/blob/develop/spec/stored_queries/taxonomy/taxonomy_search_sci_name.yaml)
-  * First commit is 2000/3/13
+  * First commit is 2020/3/13
   * This would be correct other than the missing `no rank` nodes under `varietas` or `forma`,
     assuming all species-and-below ranks were provided to the API
     * E.g. `species`, `subspecies`, `varietas`, `forma`
   * However, the [first implementation of the query](https://github.com/kbaseapps/RAST_SDK/pull/73/files) only specified the `species` rank and the `strain` boolean, missing 3 below-species ranks
 * A new RE query was made to speed up the search, hardcoding the lookup to `species` rank and the
-  `strain` booleans
+  `strain` boolean
   * [taxonomy_search_species](https://github.com/kbase/relation_engine/blob/develop/spec/stored_queries/taxonomy/taxonomy_search_species.yaml)
   * First commit is 2020/4/1
   * This misses all `subspecies`, `varietas`, and `forma` nodes as well as the `no rank` nodes
@@ -122,7 +122,7 @@ in the search.
 
 Given that what we really want is a means of only including species-and-below ranks in the search
 and `strain` is misnamed as detailed above, we will deprecate the `strain` flag and add a new
-`species_or_below` flag to all nodes below the species level (including `no rank` and `clade`
+`species_or_below` flag to all nodes at the species level or below (including `no rank` and `clade`
 nodes). We will update the taxonomy_search_species_strain* queries to return any nodes with
 that flag, regardless of the rank or `strain` flag.
 
@@ -135,9 +135,9 @@ This allows for future proofing changes to ranks since the queries only need to 
 In summary:
 * Update the 2 taxonomy_search_species_strain* queries to handle the new `species_or_below` flag
   * Add as a parameter with default `true`
-  * Clearly document that strain flag is deprecated
+  * Clearly document that the strain flag is deprecated
 * Update the loader to add that flag to all appropriate nodes
-  * Clearly document that strain flag is deprecated
+  * Clearly document that the strain flag is deprecated
 
 ### Option 2 - alter meaning and processing of the `strain` flag
 
