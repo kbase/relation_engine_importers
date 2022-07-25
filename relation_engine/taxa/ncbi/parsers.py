@@ -113,7 +113,7 @@ class NCBINodeProvider:
             yield node
 
 
-class NCBIEdgeProvider:  # TODO test
+class NCBIEdgeProvider:
     """
     NCBIEdgeProvider is an iterable that returns a new NCBI taxonomy edge as a dict where the
     from key is the child ID and the to key the parent ID with each iteration.
@@ -129,6 +129,7 @@ class NCBIEdgeProvider:  # TODO test
 
     def __iter__(self):
         for line in self._node_fh:
+            # fragile
             record = re.split(_SEP, line)
             # should really make the ints constants but meh
             id_, parent = [record[i].strip() for i in [0, 1]]
@@ -144,7 +145,7 @@ class NCBIEdgeProvider:  # TODO test
             yield edge
 
 
-class NCBIMergeProvider:  # TODO test
+class NCBIMergeProvider:
     """
     NCBIMergeProvider is an iterable that returns merged node information as a dict where the from
     key is the merged node ID and the to key the merge target node ID.
@@ -159,6 +160,7 @@ class NCBIMergeProvider:  # TODO test
 
     def __iter__(self):
         for line in self._merge_fh:
+            # fragile
             record = re.split(_SEP, line)
             merged = record[0].strip()
             edge = {

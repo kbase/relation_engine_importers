@@ -1,7 +1,7 @@
 from io import StringIO
 from pytest import raises
 
-from relation_engine.taxa.ncbi.parsers import NCBINodeProvider
+from relation_engine.taxa.ncbi.parsers import NCBINodeProvider, NCBIEdgeProvider, NCBIMergeProvider
 
 from relation_engine.test.testing_helpers import assert_exception_correct
 
@@ -191,3 +191,54 @@ def test_node_provider_fail_multiple_scientific_names():
     with raises(Exception) as got:
         list(NCBINodeProvider(names, nodes))
     assert_exception_correct(got.value, ValueError("Node 62 has 2 scientific names"))
+
+
+def test_edge_provider():
+    nodes = StringIO("\n".join([
+        "1	|	1	|	no rank	|		|	8	|	0|	1	|	0	|	0	|	0	|	0	|0	|		|",
+        "62	 \t|	44	\t|	species   	|		|	8	|	0	|	8	|	0	|	0	|	0	|	0	|0	|		|",
+        "\t 63	|\t	51	|	strain   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
+    ]))
+
+    edges = list(NCBIEdgeProvider(nodes))
+
+    assert edges == [
+        {
+            "id": "62",
+            "from": "62",
+            "to": "44"
+        },
+        {
+            "id": "63",
+            "from": "63",
+            "to": "51"
+        },
+    ]
+
+
+def test_merge_provider():
+    merges = StringIO("\n".join([
+        "  12	  |	  74109	 |",
+        "30	|	29	|",
+        "36	|	184914	|",
+    ]))
+
+    mrg = list(NCBIMergeProvider(merges))
+
+    assert mrg == [
+        {
+            "id": "12",
+            "from": "12",
+            "to": "74109",
+        },
+        {
+            "id": "30",
+            "from": "30",
+            "to": "29",
+        },
+        {
+            "id": "36",
+            "from": "36",
+            "to": "184914",
+        },
+    ]
