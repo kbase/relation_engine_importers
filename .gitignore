@@ -9,3 +9,4 @@ __pycache__
 /relation_engine/taxa/silva/test/data/
 .coverage
 cov.xml
+temparangodata
