@@ -98,7 +98,8 @@
 * Alter the loader to fail with an appropriate error message if it encounters an unexpected rank.
   * Make it reasonably simple to add new hierarchical or non-hierarchical ranks and have the
     loader process them correctly
-* Prokka annotation should be updated to `search_species` rather than `search_taxa`
+* Prokka annotation should be updated to `search_species` rather than `search_taxa` (or at least
+  make a ticket, given it's a bit out of scope for this work)
 
 ### Could be done regardless of the option chosen below
 
