@@ -113,6 +113,7 @@
       [rename the new one](https://www.arangodb.com/docs/stable/http/collection-modifying.html#rename-collection)
       during a downtime
       * Note that the collection names are exposed in the API
+* In the RE team meeting on 2022/7/26, it was decided we will not reload data, at least for now.
 
 ### Option 1 - new `species_or_below` flag
 
@@ -153,6 +154,10 @@ is referenced.
 
 Option 1. This is the cleaner long term solution, will reduce confusion in the future,
 and isn't much more work than Option 2.
+
+### Decision
+
+In the RE team meeting on 2022/7/26, Option 1 was chosen.
 
 ## Questions:
 
