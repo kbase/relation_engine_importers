@@ -135,7 +135,6 @@ This allows for future proofing changes to ranks since the queries only need to 
 
 In summary:
 * Update the 2 taxonomy_search_species_strain* queries to handle the new `species_or_below` flag
-  * Add as a parameter with default `true`
   * Clearly document that the strain flag is deprecated
 * Update the loader to add that flag to all appropriate nodes
   * Clearly document that the strain flag is deprecated
