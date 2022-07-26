@@ -2,7 +2,13 @@
 Common code for dealing with NCBI taxonomy files.
 """
 
-# TODO TEST
+# Since this is KBase internal code we can be a bit less compassionate re good
+# error messages, e.g. throwing KeyErrors or TypeErrors vs a more descriptive message.
+# Similarly, since the input is NCBI taxa dumps we probably don't need to worry much about
+# malformed input.
+# As a result we get slightly less code to maintain and a completely trivial performance boost.
+# And there was much rejoicing.
+
 
 import re
 from collections import defaultdict
@@ -45,12 +51,19 @@ class NCBINodeProvider:
         # both the names and nodes files are sorted by taxid. YAGNI for now
         name_table = defaultdict(lambda: defaultdict(list))
         for line in name_file:
+            # this is pretty fragile, but we don't expect the NCBI dump files to have errors
+            # and adding a lot of checking would be a lot of code to maintain for little purpose
             tax_id, name, _, category = re.split(_SEP, line)[0:4]
             name_table[tax_id.strip()][category.strip()].append(name.strip())
 
         return {k: dict(name_table[k]) for k in name_table.keys()}
 
     def _get_species_and_strain_ids(self):
+        # Almost certainly faster to just load the tree into memory in one pass and recurse.
+        # Originally written this way to avoid memory usage, but > 80% of the node
+        # IDs are going to be stored in memory either way.
+        # Alternately make a sqlite DB or something
+        # Given the use case is a batch load ~ 1 / month, YAGNI
         not_converged = True
         count = 1
         while not_converged:
@@ -58,6 +71,7 @@ class NCBINodeProvider:
             count += 1
             not_converged = False
             for line in self._node_fh:
+                # also fragile
                 record = re.split(_SEP, line)
                 id_, parent, rank = [record[i].strip() for i in [0, 1, 2]]
                 if rank in _SPECIES_RANKS:
@@ -99,7 +113,7 @@ class NCBINodeProvider:
             yield node
 
 
-class NCBIEdgeProvider:
+class NCBIEdgeProvider:  # TODO test
     """
     NCBIEdgeProvider is an iterable that returns a new NCBI taxonomy edge as a dict where the
     from key is the child ID and the to key the parent ID with each iteration.
@@ -130,7 +144,7 @@ class NCBIEdgeProvider:
             yield edge
 
 
-class NCBIMergeProvider:
+class NCBIMergeProvider:  # TODO test
     """
     NCBIMergeProvider is an iterable that returns merged node information as a dict where the from
     key is the merged node ID and the to key the merge target node ID.

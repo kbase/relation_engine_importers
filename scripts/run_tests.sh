@@ -7,4 +7,4 @@ set -e
 
 export PYTHONPATH=$(pwd):$(pwd)/src/
 flake8 . &&
-pytest --verbose --cov-report term --cov-report xml:cov.xml --cov=. .
+pytest -vv --cov-report term --cov-report xml:cov.xml --cov=. .
