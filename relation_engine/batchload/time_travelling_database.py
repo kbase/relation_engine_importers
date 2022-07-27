@@ -14,6 +14,8 @@ more classes and methods can be added as needed.
 from arango.exceptions import AQLQueryExecuteError as _AQLQueryExecuteError
 from arango.exceptions import DocumentDeleteError as _DocumentDeleteError
 
+from src.utils.debug import dprint
+
 _INTERNAL_ARANGO_FIELDS = ['_rev']
 
 _FLD_KEY = '_key'
@@ -125,7 +127,9 @@ class ArangoBatchTimeTravellingDB:
             vertex_collection,
             default_edge_collection=None,
             edge_collections=None,
-            merge_collection=None):
+            merge_collection=None,
+            vertex_collections=None,
+        ):
         """
         Create the DB interface.
 
@@ -141,6 +145,8 @@ class ArangoBatchTimeTravellingDB:
           The collections are checked for existence and cached for performance reasons.
         merge_collection - a collection containing edges that indicate that a node has been
           merged into another node.
+        vertex_collections - a list of any other vertex collections that edges may connect with.
+          The collections are checked for existence and cached for performance reasons
 
         Specifying an edge collection in a method argument that is not in edge_collections,
         is not the default edge collection, or is not the merge collection will result in an error.
@@ -155,28 +161,33 @@ class ArangoBatchTimeTravellingDB:
             edgecols.add(default_edge_collection)
         if edge_collections:
             edgecols.update(edge_collections)
-        if not edgecols:
-            raise ValueError("At least one edge collection must be specified")
+
         self._vertex_collection = self._init_col(vertex_collection)
+        vertcols = set()
+        vertcols.add(vertex_collection)
+        if vertex_collections:
+            vertcols.update(vertex_collections)
+
         # TODO CODE could check if any loads are in progress for the namespace and bail if so
         self._registry_collection = self._init_col(load_registry_collection)
 
         self._edgecols = {n: self._init_col(n, edge=True) for n in edgecols}
+        self._vertcols = {n: self._init_col(n, edge=False) for n in vertcols}
 
-        self._id_indexes = self._check_indexes()
+        self._id_indexes = self._check_create_indexes()
 
-    def _check_indexes(self):
+    def _check_create_indexes(self):
         # check indexes and store names of required indexes
-        cols = [self._vertex_collection] + list(self._edgecols.values())
+        # add any assumed kb indexes if not existing
+        cols = list(self._vertcols.values()) + list(self._edgecols.values())
         if self.get_merge_collection():
             cols.append(self._merge_collection)
 
         id_indexes = {}
         for col in cols:
-            idx = col.indexes()  # http request
-            id_indexes[col.name] = self._get_index_name(col.name, self._ID_EXP_CRE_INDEX, idx)
+            id_indexes[col.name] = self._create_get_index_name(col, self._ID_EXP_CRE_INDEX)
             # check the other required index exists. Don't need to store it for later though
-            self._get_index_name(col.name, self._EXP_CRE_LAST_VER_INDEX, idx)
+            self._create_get_index_name(col, self._EXP_CRE_LAST_VER_INDEX)
 
         return id_indexes
 
@@ -194,13 +205,15 @@ class ArangoBatchTimeTravellingDB:
         'unique': False
     }
 
-    def _get_index_name(self, col_name, index_spec, indexes):
-        for idx in indexes:
-            if not self._is_index_equivalent(index_spec, idx):
-                continue
-            return idx['name']
-        raise ValueError(f'Collection {col_name} is missing required index with ' +
-                         f'specification {index_spec}')
+    def _create_get_index_name(self, coll, kb_persistent_idx_spec):
+        for idx in coll.indexes():
+            if self._is_index_equivalent(kb_persistent_idx_spec, idx):
+                return idx['name']
+        return coll.add_persistent_index(
+            self._ID_EXP_CRE_INDEX["fields"],
+            self._ID_EXP_CRE_INDEX["unique"],
+            self._ID_EXP_CRE_INDEX["sparse"]
+        )["name"]
 
     def _is_index_equivalent(self, index_spec, index):
         for field in index_spec:
@@ -349,7 +362,7 @@ class ArangoBatchTimeTravellingDB:
         # for some reason is None works, just a check doesn't
         return None if self._merge_collection is None else self._merge_collection.name
 
-    def get_vertices(self, ids, timestamp):
+    def get_vertices(self, ids, timestamp, col_name=None):
         """
         Get vertices that exist at the given timestamp from a collection.
 
@@ -361,7 +374,8 @@ class ArangoBatchTimeTravellingDB:
         Returns a dict of vertex ID -> vertex. Missing vertices are not included and do not
           cause an error.
         """
-        col_name = self._vertex_collection.name
+        if not col_name:
+            col_name = self._vertex_collection.name
         return self._get_documents(ids, timestamp, col_name)
 
     def _get_documents(self, ids, timestamp, collection_name):

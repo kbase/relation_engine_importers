@@ -18,7 +18,7 @@ from arango import ArangoClient
 import datetime
 from pytest import fixture
 
-HOST = 'http://localhost:8529'
+HOST = 'http://localhost:8531'
 DB_NAME = 'test_delta_load_integration_db'
 
 ADB_MAX_TIME = 2**53 - 1

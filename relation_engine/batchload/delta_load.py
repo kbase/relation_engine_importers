@@ -13,6 +13,8 @@ import datetime as _dt
 import itertools as _itertools
 import time as _time
 
+from src.utils.debug import dprint
+
 # TODO TEST
 # TODO DOCS document reserved fields that will be overwritten if supplied
 # TODO CODE add notification callback so that the caller can implement %
@@ -20,6 +22,12 @@ import time as _time
 # algorithm. Remove _VERBOSE prints at that point
 
 # TODO CODE consider threading / multiprocessing here. Virtually all the time is db access
+
+
+def set_verbosity(do_verbose):
+    global _VERBOSE
+    _VERBOSE = do_verbose
+
 
 _VERBOSE = False
 _ID = 'id'
@@ -29,11 +37,11 @@ _KEY = '_key'
 def load_graph_delta(
         load_namespace,
         vertex_source,
-        edge_source,
         database,
         timestamp,
         release_timestamp,
         load_version,
+        edge_source=None,
         merge_source=None,
         batch_size=10000):
     """
@@ -83,13 +91,14 @@ def load_graph_delta(
     db.expire_extant_vertices_without_last_version(
         timestamp - 1, release_timestamp - 1, load_version)
 
-    _process_edges(db, edge_source, timestamp, release_timestamp, load_version, batch_size)
+    if edge_source:
+        _process_edges(db, edge_source, timestamp, release_timestamp, load_version, batch_size)
 
-    if _VERBOSE:
-        print(f'expiring edges: {_time.time()}')
-    for col in db.get_edge_collections():
-        db.expire_extant_edges_without_last_version(
-            timestamp - 1, release_timestamp - 1,  load_version, edge_collection=col)
+        if _VERBOSE:
+            print(f'expiring edges: {_time.time()}')
+        for col in db.get_edge_collections():
+            db.expire_extant_edges_without_last_version(
+                timestamp - 1, release_timestamp - 1,  load_version, edge_collection=col)
 
     db.register_load_complete(load_namespace, load_version, _get_current_timestamp())
 
@@ -183,37 +192,45 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
         if _VERBOSE:
             print(f'edge batch {count}: {_time.time()}')
         count += 1
-        keys = _defaultdict(list)
+        coll_2_eid_set = _defaultdict(set)
+        coll_2_vid_set = _defaultdict(set)
         bulkset = {}
-        vertkeys = set()
         for e in edges:
             # The edges exists in the current load so their nodes must exist by now
-            vertkeys.add(e['to'])
-            vertkeys.add(e['from'])
+            # Or load the nodes first
+            if e.get("_is_xref"):
+                vcoll0, vid0 = e['from'].split('/', 1)
+                vcoll1, vid1 = e['to'].split('/', 1)
+                coll_2_vid_set[vcoll0].add(vid0)
+                coll_2_vid_set[vcoll1].add(vid1)
+            else:
+                coll_2_vid_set[db.get_vertex_collection()].add(e['to'])
+                coll_2_vid_set[db.get_vertex_collection()].add(e['from'])
             col = e.get('_collection')
             if not col:
                 col = db.get_default_edge_collection()
-            keys[col].append(e[_ID])
+            coll_2_eid_set[col].add(e[_ID])
             if col not in bulkset:
                 bulkset[col] = db.get_batch_updater(col)
+
         dbedges = {}
-        for col, keys in keys.items():
+        for col, eid_set in coll_2_eid_set.items():
             if _VERBOSE:
-                print(f'  looking up {len(keys)} edges in {col}: {_time.time()}')
-            dbedges[col] = db.get_edges(keys, timestamp, edge_collection=col)
+                print(f'  looking up {len(eid_set)} edges in {col}: {_time.time()}')
+            dbedges[col] = db.get_edges(list(eid_set), timestamp, edge_collection=col)
             if _VERBOSE:
                 print(f'  got {len(dbedges[col])} edges: {_time.time()}')
 
         # Could cache these, may be fetching the same vertex over and over, but no guarantees
         # the same vertexes are repeated in a reasonable amount of time
         # Batching the fetch is probably enough
-        if _VERBOSE:
-            print(f'  looking up {len(vertkeys)} vertices: {_time.time()}')
-        dbverts = db.get_vertices(list(vertkeys), timestamp)
-        if _VERBOSE:
-            print(f'  got {len(dbverts)} vertices: {_time.time()}')
-        keys = None
-        vertkeys = None
+        dbverts = {}
+        for col, vid_set in coll_2_vid_set.items():
+            if _VERBOSE:
+                print(f'  looking up {len(vid_set)} vertices: {_time.time()}')
+            dbverts[col] = db.get_vertices(list(vid_set), timestamp, col_name=col)
+            if _VERBOSE:
+                print(f'  got {len(dbverts[col])} vertices: {_time.time()}')
 
         for e in edges:
             col = e.pop('_collection', None)
@@ -221,8 +238,14 @@ def _process_edges(db, edge_source, timestamp, release_timestamp, load_version, 
                 col = db.get_default_edge_collection()
             dbe = dbedges[col].get(e[_ID])
             bulk = bulkset[col]
-            from_ = dbverts[e['from']]
-            to = dbverts[e['to']]
+            if e.pop("_is_xref", None):
+                vcoll0, vid0 = e['from'].split('/', 1)
+                vcoll1, vid1 = e['to'].split('/', 1)
+                from_ = dbverts[vcoll0][vid0]
+                to = dbverts[vcoll1][vid1]
+            else:
+                from_ = dbverts[db.get_vertex_collection()][e['from']]
+                to = dbverts[db.get_vertex_collection()][e['to']]
             if dbe:
                 if (not _special_equal(e, dbe) or
                         # these two conditions check whether the nodes the edge is attached to

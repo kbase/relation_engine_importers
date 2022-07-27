@@ -11,7 +11,7 @@ from relation_engine.batchload.test.test_helpers import check_docs, check_except
 from arango import ArangoClient
 from pytest import fixture
 
-HOST = 'http://localhost:8529'
+HOST = 'http://localhost:8531'
 DB_NAME = 'test_timetravel_delta_batch_load_db'
 
 
