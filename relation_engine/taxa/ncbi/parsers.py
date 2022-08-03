@@ -13,15 +13,14 @@ Common code for dealing with NCBI taxonomy files.
 import re
 from collections import defaultdict
 
+from relation_engine.taxa.ncbi.ranks import (
+    RANKS_ALL,
+    RANKS_SPECIES_AND_BELOW,
+    RANKS_NON_HIERARCHICAL,
+)
+
 _SEP = r'\s\|\s?'
 _SCI_NAME = 'scientific name'
-_RANK_SPECIES = 'species'
-_RANK_NO_RANK = 'no rank'
-_RANK_SUBSPECIES = 'subspecies'
-# Based on the August 2019 NCBI release, species groups and subgroups do not link to strains.
-# The child nodes have names like "ananassae species complex" or "mayaguana subcluster" or
-# "unclassified Bisgaard taxa
-_SPECIES_RANKS = set([_RANK_SPECIES, _RANK_SUBSPECIES])
 
 
 class NCBINodeProvider:
@@ -74,9 +73,11 @@ class NCBINodeProvider:
                 # also fragile
                 record = re.split(_SEP, line)
                 id_, parent, rank = [record[i].strip() for i in [0, 1, 2]]
-                if rank in _SPECIES_RANKS:
+                if rank not in RANKS_ALL:
+                    raise ValueError(f"Node {id_} has an unexpected rank of {rank}")
+                if rank in RANKS_SPECIES_AND_BELOW:
                     self._species_tax_ids.add(id_)  # after the first round this is a no-op
-                elif (rank == _RANK_NO_RANK
+                elif (rank in RANKS_NON_HIERARCHICAL
                         and id_ not in self._strain_tax_ids
                         and (parent in self._species_tax_ids or parent in self._strain_tax_ids)):
                     not_converged = True
@@ -104,7 +105,11 @@ class NCBINodeProvider:
                 'id':                         id_,
                 'scientific_name':            sci_names[0],
                 'rank':                       rank,
+                # strain is deprecated, confusing, and collides with the new NCBI strain rank
+                # but is kept for backwards compatibilty reasons
                 'strain':                     id_ in self._strain_tax_ids,
+                'species_or_below':           (id_ in self._strain_tax_ids
+                                               or id_ in self._species_tax_ids),
                 'aliases':                    aliases,
                 'ncbi_taxon_id':              int(id_),
                 'gencode':                    int(gencode),

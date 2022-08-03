@@ -5,15 +5,17 @@ from relation_engine.taxa.ncbi.parsers import NCBINodeProvider, NCBIEdgeProvider
 
 from relation_engine.test.testing_helpers import assert_exception_correct
 
-
-def test_node_provider_trivial():
-    # A basic test to show the parser is working for simple cases.
-    names = StringIO("\n".join([
+SIMPLE_NAMES = "\n".join([
         " \t  62  |  nerf herder  | Herdere le nerfe  \t  |  synonym    \t  |",
         " \t 62  |  \t  l. skywalkerii   |    |   scientific name   \t  | ",
         " \t 62  |  \t  scum and villany \t   |    | \t   type material   \t  | ",
         "     63   |    \t    c. bacca  \t   |   |  scientific name  \t   | "
-    ]))
+])
+
+
+def test_node_provider_trivial():
+    # A basic test to show the parser is working for simple cases.
+    names = StringIO(SIMPLE_NAMES)
 
     nodes = StringIO("\n".join([
         "62	|	44	|	species   	|		|	8	|	0	|	8	|	0	|	0	|	0	|	0	|0	|		|",
@@ -28,6 +30,7 @@ def test_node_provider_trivial():
             'scientific_name':            "l. skywalkerii",
             'rank':                       "species",
             'strain':                     False,
+            'species_or_below':           True,
             'aliases':                    [
                 {"category": "synonym", "name": "nerf herder"},
                 {"category": "type material", "name": "scum and villany"},
@@ -40,6 +43,7 @@ def test_node_provider_trivial():
             'scientific_name':            "c. bacca",
             'rank':                       "strain",
             'strain':                     False,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              63,
             'gencode':                    11,
@@ -71,11 +75,8 @@ def test_node_provider_complex():
         " 69	|	62	|	subspecies   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
         " 70	|	69	|	no rank   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
         " 71	|	62	|	forma   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
-        # TODO this node will not get marked as a strain, which is a bug that will be
-        # corrected shortly
-        " 72	|	71	|	no rank   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
-        # TODO also a bug; the parser will be updated to throw an error on an unknown rank
-        " 73	|	44	|	fake rank   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
+        " 72	|	71	|	clade   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
+        " 73	|	72	|	no rank   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
         " 74	|	44	|	no rank   	|		|	6	|	0	|	11	|	0	|	0	|	0	|	0	|0	|		|",
     ]))
 
@@ -87,6 +88,7 @@ def test_node_provider_complex():
             'scientific_name':            "l. skywalkerii",
             'rank':                       "species",
             'strain':                     False,
+            'species_or_below':           True,
             'aliases':                    [{"category": "synonym", "name": "nerf herder"}],
             'ncbi_taxon_id':              62,
             'gencode':                    8,
@@ -96,6 +98,7 @@ def test_node_provider_complex():
             'scientific_name':            "c. bacca",
             'rank':                       "strain",
             'strain':                     False,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              63,
             'gencode':                    11,
@@ -105,6 +108,7 @@ def test_node_provider_complex():
             'scientific_name':            "sciname67",
             'rank':                       "no rank",
             'strain':                     True,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              67,
             'gencode':                    12,
@@ -114,6 +118,7 @@ def test_node_provider_complex():
             'scientific_name':            "sciname68",
             'rank':                       "no rank",
             'strain':                     True,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              68,
             'gencode':                    11,
@@ -123,6 +128,7 @@ def test_node_provider_complex():
             'scientific_name':            "sciname69",
             'rank':                       "subspecies",
             'strain':                     False,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              69,
             'gencode':                    11,
@@ -132,6 +138,7 @@ def test_node_provider_complex():
             'scientific_name':            "sciname70",
             'rank':                       "no rank",
             'strain':                     True,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              70,
             'gencode':                    11,
@@ -141,6 +148,7 @@ def test_node_provider_complex():
             'scientific_name':            "sciname71",
             'rank':                       "forma",
             'strain':                     False,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              71,
             'gencode':                    11,
@@ -148,8 +156,9 @@ def test_node_provider_complex():
         {
             'id':                         "72",
             'scientific_name':            "sciname72",
-            'rank':                       "no rank",
-            'strain':                     False,
+            'rank':                       "clade",
+            'strain':                     True,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              72,
             'gencode':                    11,
@@ -157,8 +166,9 @@ def test_node_provider_complex():
         {
             'id':                         "73",
             'scientific_name':            "sciname73",
-            'rank':                       "fake rank",
-            'strain':                     False,
+            'rank':                       "no rank",
+            'strain':                     True,
+            'species_or_below':           True,
             'aliases':                    [],
             'ncbi_taxon_id':              73,
             'gencode':                    11,
@@ -168,11 +178,245 @@ def test_node_provider_complex():
             'scientific_name':            "sciname74",
             'rank':                       "no rank",
             'strain':                     False,
+            'species_or_below':           False,
             'aliases':                    [],
             'ncbi_taxon_id':              74,
             'gencode':                    11,
         },
     ]
+
+
+_NON_SPECIES_RANKS = [
+    "superkingdom",
+    "kingdom",
+    "subkingdom",
+    "superphylum",
+    "phylum",
+    "subphylum",
+    "infraphylum",
+    "superclass",
+    "class",
+    "subclass",
+    "infraclass",
+    "cohort",
+    "subcohort",
+    "superorder",
+    "order",
+    "suborder",
+    "infraorder",
+    "parvorder",
+    "superfamily",
+    "family",
+    "subfamily",
+    "tribe",
+    "subtribe",
+    "genus",
+    "subgenus",
+    "section",
+    "subsection",
+    "series",
+    "subseries",
+    "species group",
+    "species subgroup",
+]
+
+
+def test_node_provider_non_species_ranks():
+    # test that non-species ranks are accepted and don't result in marking non hierarchical ranks
+    # below them as strains.
+    # This test duplicates the list of ranks from ranks.py, which it should - if someone screws
+    # up ranks.py this test should fail. It will not if it just imports and uses the same
+    # rank set.
+    for rank in _NON_SPECIES_RANKS:
+        names = StringIO("\n".join([
+            "  \t 5  |  \t  name5   |    |   scientific name   \t  | ",
+            "  \t 10  |  \t  name10   |    |   scientific name   \t  | ",
+            "  \t 15  |  \t  name15   |    |   scientific name   \t  | ",
+            "  \t 100  |  \t  name100   |    |   scientific name   \t  | ",
+            "  \t 105  |  \t  name105   |    |   scientific name   \t  | ",
+            "  \t 110  |  \t  name110   |    |   scientific name   \t  | ",
+        ]))
+        nodes = StringIO("\n".join([
+            f" 5	|	1	|	{rank}   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 10	|	5	|	clade   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 15	|	10	|	no rank   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 100	|	678	|	varietas   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 105	|	100	|	no rank   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 110	|	105	|	clade   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+        ]))
+
+        res = list(NCBINodeProvider(names, nodes))
+
+        assert res == [
+            {
+                'id':                         "5",
+                'scientific_name':            "name5",
+                'rank':                       rank,
+                'strain':                     False,
+                'species_or_below':           False,
+                'aliases':                    [],
+                'ncbi_taxon_id':              5,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "10",
+                'scientific_name':            "name10",
+                'rank':                       "clade",
+                'strain':                     False,
+                'species_or_below':           False,
+                'aliases':                    [],
+                'ncbi_taxon_id':              10,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "15",
+                'scientific_name':            "name15",
+                'rank':                       "no rank",
+                'strain':                     False,
+                'species_or_below':           False,
+                'aliases':                    [],
+                'ncbi_taxon_id':              15,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "100",
+                'scientific_name':            "name100",
+                'rank':                       "varietas",
+                'strain':                     False,
+                'species_or_below':           True,
+                'aliases':                    [],
+                'ncbi_taxon_id':              100,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "105",
+                'scientific_name':            "name105",
+                'rank':                       "no rank",
+                'strain':                     True,
+                'species_or_below':           True,
+                'aliases':                    [],
+                'ncbi_taxon_id':              105,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "110",
+                'scientific_name':            "name110",
+                'rank':                       "clade",
+                'strain':                     True,
+                'species_or_below':           True,
+                'aliases':                    [],
+                'ncbi_taxon_id':              110,
+                'gencode':                    1,
+            },
+        ]
+
+
+_SPECIES_RANKS = [
+    "species",
+    "forma specialis",
+    "subspecies",
+    "varietas",
+    "morph",
+    "subvariety",
+    "forma",
+    "serogroup",
+    "pathogroup",
+    "serotype",
+    "biotype",
+    "genotype",
+    "strain",
+    "isolate",
+]
+
+
+def test_node_provider_species_and_below_ranks():
+    # test that species ranks are accepted and result in marking non hierarchical ranks
+    # below them as strains.
+    # This test duplicates the list of ranks from ranks.py, which it should - if someone screws
+    # up ranks.py this test should fail. It will not if it just imports and uses the same
+    # rank set.
+    for rank in _SPECIES_RANKS:
+        names = StringIO("\n".join([
+            "  \t 5  |  \t  name5   |    |   scientific name   \t  | ",
+            "  \t 10  |  \t  name10   |    |   scientific name   \t  | ",
+            "  \t 15  |  \t  name15   |    |   scientific name   \t  | ",
+            "  \t 100  |  \t  name100   |    |   scientific name   \t  | ",
+            "  \t 105  |  \t  name105   |    |   scientific name   \t  | ",
+            "  \t 110  |  \t  name110   |    |   scientific name   \t  | ",
+        ]))
+        nodes = StringIO("\n".join([
+            f" 5	|	1	|	{rank}   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 10	|	5	|	clade   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 15	|	10	|	no rank   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 100	|	678	|	tribe   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 105	|	100	|	no rank   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+            " 110	|	105	|	clade   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+        ]))
+
+        res = list(NCBINodeProvider(names, nodes))
+
+        assert res == [
+            {
+                'id':                         "5",
+                'scientific_name':            "name5",
+                'rank':                       rank,
+                'strain':                     False,
+                'species_or_below':           True,
+                'aliases':                    [],
+                'ncbi_taxon_id':              5,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "10",
+                'scientific_name':            "name10",
+                'rank':                       "clade",
+                'strain':                     True,
+                'species_or_below':           True,
+                'aliases':                    [],
+                'ncbi_taxon_id':              10,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "15",
+                'scientific_name':            "name15",
+                'rank':                       "no rank",
+                'strain':                     True,
+                'species_or_below':           True,
+                'aliases':                    [],
+                'ncbi_taxon_id':              15,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "100",
+                'scientific_name':            "name100",
+                'rank':                       "tribe",
+                'strain':                     False,
+                'species_or_below':           False,
+                'aliases':                    [],
+                'ncbi_taxon_id':              100,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "105",
+                'scientific_name':            "name105",
+                'rank':                       "no rank",
+                'strain':                     False,
+                'species_or_below':           False,
+                'aliases':                    [],
+                'ncbi_taxon_id':              105,
+                'gencode':                    1,
+            },
+            {
+                'id':                         "110",
+                'scientific_name':            "name110",
+                'rank':                       "clade",
+                'strain':                     False,
+                'species_or_below':           False,
+                'aliases':                    [],
+                'ncbi_taxon_id':              110,
+                'gencode':                    1,
+            },
+        ]
 
 
 def test_node_provider_fail_multiple_scientific_names():
@@ -188,9 +432,24 @@ def test_node_provider_fail_multiple_scientific_names():
         " 63	|	44	|	strain   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
     ]))
 
+    fail_node_provider(names, nodes, ValueError("Node 62 has 2 scientific names"))
+
+
+def test_node_provider_fail_unexpected_rank():
+    names = StringIO(SIMPLE_NAMES)
+
+    nodes = StringIO("\n".join([
+        " 62	|	44	|	species   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+        " 63	|	44	|	fake rank   	|		|	8	|	0	|	1	|	0	|	0	|	0	|	0	|0	|		|",
+    ]))
+
+    fail_node_provider(names, nodes, ValueError("Node 63 has an unexpected rank of fake rank"))
+
+
+def fail_node_provider(names, nodes, expected):
     with raises(Exception) as got:
         list(NCBINodeProvider(names, nodes))
-    assert_exception_correct(got.value, ValueError("Node 62 has 2 scientific names"))
+    assert_exception_correct(got.value, expected)
 
 
 def test_edge_provider():
