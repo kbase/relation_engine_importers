@@ -18,49 +18,58 @@ def test_node_provider():
 
     assert res == [
         {
-            'id': "d:Bacteria",
-            'rank': "domain",
-            'name': "Bacteria"
+            "id": "d:Bacteria",
+            "rank": "domain",
+            "scientific_name": "Bacteria",
+            "species_or_below": False
         },
         {
-            'id': "p:Proteobacteria",
-            'rank': "phylum",
-            'name': "Proteobacteria"
+            "id": "p:Proteobacteria",
+            "rank": "phylum",
+            "scientific_name": "Proteobacteria",
+            "species_or_below": False
         },
         {
-            'id': "c:Gammaproteobacteria",
-            'rank': "class",
-            'name': "Gammaproteobacteria"
+            "id": "c:Gammaproteobacteria",
+            "rank": "class",
+            "scientific_name": "Gammaproteobacteria",
+            "species_or_below": False
         },
         {
-            'id': "o:Enterobacterales",
-            'rank': "order",
-            'name': "Enterobacterales"
+            "id": "o:Enterobacterales",
+            "rank": "order",
+            "scientific_name": "Enterobacterales",
+            "species_or_below": False
         },
         {
-            'id': "f:Enterobacteriaceae",
-            'rank': "family",
-            'name': "Enterobacteriaceae"
+            "id": "f:Enterobacteriaceae",
+            "rank": "family",
+            "scientific_name": "Enterobacteriaceae",
+            "species_or_below": False
         },
         {
-            'id': "g:Escherichia",
-            'rank': "genus",
-            'name': "Escherichia"
+            "id": "g:Escherichia",
+            "rank": "genus",
+            "scientific_name": "Escherichia",
+            "species_or_below": False
         },
         {
-            'id': "s:Escherichia_coli",
-            'rank': "species",
-            'name': "Escherichia coli"
+            "id": "s:Escherichia_coli",
+            "rank": "species",
+            "scientific_name": "Escherichia coli",
+            "species_or_below": True
         },
         {
-            'id': "RS_GCF_000566285.1",
-            'rank': "genome",
-            'name': "Escherichia coli"
+            "id": "RS_GCF_000566285.1",
+            "rank": "genome",
+            "scientific_name": "Escherichia coli",
+            "species_or_below": True
         },
         {
-            'id': "RS_GCF_003460375.1",
-            'rank': "genome",
-            'name': "Escherichia coli"
+            "id": "RS_GCF_003460375.1",
+            "rank": "genome",
+            "scientific_name": "Escherichia coli",
+            "species_or_below": True
         },
     ]
 
@@ -92,44 +101,44 @@ def test_edge_provider():
 
     assert res == [
         {
-            'id': "p:Proteobacteria",
-            'from': "p:Proteobacteria",
-            'to': "d:Bacteria"
+            "id": "p:Proteobacteria",
+            "from": "p:Proteobacteria",
+            "to": "d:Bacteria"
         },
         {
-            'id': "c:Gammaproteobacteria",
-            'from': "c:Gammaproteobacteria",
-            'to': "p:Proteobacteria"
+            "id": "c:Gammaproteobacteria",
+            "from": "c:Gammaproteobacteria",
+            "to": "p:Proteobacteria"
         },
         {
-            'id': "o:Enterobacterales",
-            'from': "o:Enterobacterales",
-            'to': "c:Gammaproteobacteria"
+            "id": "o:Enterobacterales",
+            "from": "o:Enterobacterales",
+            "to": "c:Gammaproteobacteria"
         },
         {
-            'id': "f:Enterobacteriaceae",
-            'from': "f:Enterobacteriaceae",
-            'to': "o:Enterobacterales"
+            "id": "f:Enterobacteriaceae",
+            "from": "f:Enterobacteriaceae",
+            "to": "o:Enterobacterales"
         },
         {
-            'id': "g:Escherichia",
-            'from': "g:Escherichia",
-            'to': "f:Enterobacteriaceae"
+            "id": "g:Escherichia",
+            "from": "g:Escherichia",
+            "to": "f:Enterobacteriaceae"
         },
         {
-            'id': "s:Escherichia_coli",
-            'from': "s:Escherichia_coli",
-            'to': "g:Escherichia"
+            "id": "s:Escherichia_coli",
+            "from": "s:Escherichia_coli",
+            "to": "g:Escherichia"
         },
         {
-            'id': "RS_GCF_000566285.1",
-            'from': "RS_GCF_000566285.1",
-            'to': "s:Escherichia_coli"
+            "id": "RS_GCF_000566285.1",
+            "from": "RS_GCF_000566285.1",
+            "to": "s:Escherichia_coli"
         },
         {
-            'id': "RS_GCF_003460375.1",
-            'from': "RS_GCF_003460375.1",
-            'to': "s:Escherichia_coli"
+            "id": "RS_GCF_003460375.1",
+            "from": "RS_GCF_003460375.1",
+            "to": "s:Escherichia_coli"
         },
     ]
 
