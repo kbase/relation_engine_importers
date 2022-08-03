@@ -4,6 +4,15 @@ Common code for dealing with GTDB taxonomy files.
 Parses the taxonomy file, not the metadata file.
 """
 
+from relation_engine.taxa.common_fields import (
+    FROM,
+    TO,
+    ID,
+    SCI_NAME,
+    RANK,
+    SPECIES_OR_BELOW,
+)
+
 # Since this is KBase internal code we can be a bit less compassionate re good
 # error messages, e.g. throwing KeyErrors or TypeErrors vs a more descriptive message.
 # Similarly, since the input is GTDB taxa files we probably don't need to worry much about
@@ -48,19 +57,18 @@ class GTDBNodeProvider:
             for lin in lineage:
                 l_id = _taxon_to_id(lin)
                 if l_id not in seen_taxa:
-                    # TODO Move these fields common to the loaders into a shared file
                     yield {
-                        "id": l_id,
-                        "rank": _TAXA_TYPES[lin["abbrev"]],
-                        "scientific_name": lin["name"],
-                        "species_or_below": lin["abbrev"] == _ABBRV_SPECIES
+                        ID: l_id,
+                        RANK: _TAXA_TYPES[lin["abbrev"]],
+                        SCI_NAME: lin["name"],
+                        SPECIES_OR_BELOW: lin["abbrev"] == _ABBRV_SPECIES
                     }
                 seen_taxa.add(l_id)
             yield {
-                "id": accession,
-                "rank": "genome",
-                "scientific_name": lineage[-1]["name"],
-                "species_or_below": True
+                ID: accession,
+                RANK: "genome",
+                SCI_NAME: lineage[-1]["name"],
+                SPECIES_OR_BELOW: True
             }
 
 
@@ -88,16 +96,16 @@ class GTDBEdgeProvider:
                 child_id = _taxon_to_id(lineage[i + 1])
                 if child_id not in seen_taxa:
                     yield {
-                        "id": child_id,  # one edge per child
-                        "from": child_id,
-                        "to": parent_id
+                        ID: child_id,  # one edge per child
+                        FROM: child_id,
+                        TO: parent_id
                     }
                 seen_taxa.add(child_id)
             parent_id = _taxon_to_id(lineage[-1])
             yield {
-                "id": accession,  # one edge per child
-                "from": accession,
-                "to": parent_id
+                ID: accession,  # one edge per child
+                FROM: accession,
+                TO: parent_id
             }
 
 

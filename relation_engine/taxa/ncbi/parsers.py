@@ -13,6 +13,15 @@ Common code for dealing with NCBI taxonomy files.
 import re
 from collections import defaultdict
 
+from relation_engine.taxa.common_fields import (
+    FROM,
+    TO,
+    ID,
+    SCI_NAME,
+    RANK,
+    SPECIES_OR_BELOW,
+)
+
 from relation_engine.taxa.ncbi.ranks import (
     RANKS_ALL,
     RANKS_SPECIES_AND_BELOW,
@@ -102,13 +111,13 @@ class NCBINodeProvider:
             if len(sci_names) != 1:
                 raise ValueError('Node {} has {} scientific names'.format(id_, len(sci_names)))
             node = {
-                'id':                         id_,
-                'scientific_name':            sci_names[0],
-                'rank':                       rank,
+                ID:                         id_,
+                SCI_NAME:            sci_names[0],
+                RANK:                       rank,
                 # strain is deprecated, confusing, and collides with the new NCBI strain rank
                 # but is kept for backwards compatibilty reasons
                 'strain':                     id_ in self._strain_tax_ids,
-                'species_or_below':           (id_ in self._strain_tax_ids
+                SPECIES_OR_BELOW:             (id_ in self._strain_tax_ids
                                                or id_ in self._species_tax_ids),
                 'aliases':                    aliases,
                 'ncbi_taxon_id':              int(id_),
@@ -143,9 +152,9 @@ class NCBIEdgeProvider:
                 continue  # no self edges
 
             edge = {
-                'id': id_,  # since there's 1 edge / child the child id uniquely IDs the edge
-                'from': id_,
-                'to': parent
+                ID: id_,  # since there's 1 edge / child the child id uniquely IDs the edge
+                FROM: id_,
+                TO: parent
             }
             yield edge
 
@@ -169,8 +178,8 @@ class NCBIMergeProvider:
             record = re.split(_SEP, line)
             merged = record[0].strip()
             edge = {
-                'id': merged,  # since you can't merge into multiple nodes, the id is a unique id
-                'from': merged,
-                'to': record[1].strip()
+                ID: merged,  # since you can't merge into multiple nodes, the id is a unique id
+                FROM: merged,
+                TO: record[1].strip()
             }
             yield edge
