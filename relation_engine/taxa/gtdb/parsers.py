@@ -4,7 +4,13 @@ Common code for dealing with GTDB taxonomy files.
 Parses the taxonomy file, not the metadata file.
 """
 
-# TODO TEST
+# Since this is KBase internal code we can be a bit less compassionate re good
+# error messages, e.g. throwing KeyErrors or TypeErrors vs a more descriptive message.
+# Similarly, since the input is GTDB taxa files we probably don't need to worry much about
+# malformed input.
+# As a result we get slightly less code to maintain and a completely trivial performance boost.
+# And there was much rejoicing.
+
 # TODO DOCS better documentation.
 
 _TAXA_TYPES = {
