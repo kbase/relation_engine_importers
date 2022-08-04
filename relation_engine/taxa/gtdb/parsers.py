@@ -13,14 +13,16 @@ Parses the taxonomy file, not the metadata file.
 
 # TODO DOCS better documentation.
 
+_ABBRV_SPECIES = "s"
+
 _TAXA_TYPES = {
-    'd': 'domain',
-    'p': 'phylum',
-    'c': 'class',
-    'o': 'order',
-    'f': 'family',
-    'g': 'genus',
-    's': 'species',
+    "d": "domain",
+    "p": "phylum",
+    "c": "class",
+    "o": "order",
+    "f": "family",
+    "g": "genus",
+    _ABBRV_SPECIES: "species",
 }
 
 
@@ -41,21 +43,24 @@ class GTDBNodeProvider:
     def __iter__(self):
         seen_taxa = set()  # not including leaves
         for line in self._fh:
-            accession, lineage = line.strip().split('\t')
+            accession, lineage = line.strip().split("\t")
             lineage = _get_lineage(lineage)
             for lin in lineage:
                 l_id = _taxon_to_id(lin)
                 if l_id not in seen_taxa:
+                    # TODO Move these fields common to the loaders into a shared file
                     yield {
-                        'id': l_id,
-                        'rank': _TAXA_TYPES[lin['abbrev']],
-                        'name': lin['name']
+                        "id": l_id,
+                        "rank": _TAXA_TYPES[lin["abbrev"]],
+                        "scientific_name": lin["name"],
+                        "species_or_below": lin["abbrev"] == _ABBRV_SPECIES
                     }
                 seen_taxa.add(l_id)
             yield {
-                'id': accession,
-                'rank': 'genome',
-                'name': lineage[-1]['name']
+                "id": accession,
+                "rank": "genome",
+                "scientific_name": lineage[-1]["name"],
+                "species_or_below": True
             }
 
 
@@ -76,36 +81,36 @@ class GTDBEdgeProvider:
     def __iter__(self):
         seen_taxa = set()  # not including leaves
         for line in self._fh:
-            accession, lineage = line.strip().split('\t')
+            accession, lineage = line.strip().split("\t")
             lineage = _get_lineage(lineage)
             for i in range(len(lineage) - 1):
                 parent_id = _taxon_to_id(lineage[i])
                 child_id = _taxon_to_id(lineage[i + 1])
                 if child_id not in seen_taxa:
                     yield {
-                        'id': child_id,  # one edge per child
-                        'from': child_id,
-                        'to': parent_id
+                        "id": child_id,  # one edge per child
+                        "from": child_id,
+                        "to": parent_id
                     }
                 seen_taxa.add(child_id)
             parent_id = _taxon_to_id(lineage[-1])
             yield {
-                'id': accession,  # one edge per child
-                'from': accession,
-                'to': parent_id
+                "id": accession,  # one edge per child
+                "from": accession,
+                "to": parent_id
             }
 
 
 def _get_lineage(linstr):
-    ln = linstr.split(';')
+    ln = linstr.split(";")
     ret = []
     for lin in ln:
-        taxa_abbrev, taxa_name = lin.split('__')
-        ret.append({'abbrev': taxa_abbrev, 'name': taxa_name})
-    if ret[-1]['abbrev'] != 's':
-        raise ValueError(f'Lineage {linstr} does not end with species')
+        taxa_abbrev, taxa_name = lin.split("__")
+        ret.append({"abbrev": taxa_abbrev, "name": taxa_name})
+    if ret[-1]["abbrev"] != "s":
+        raise ValueError(f"Lineage {linstr} does not end with species")
     return ret
 
 
 def _taxon_to_id(taxon):
-    return f"{taxon['abbrev']}:{taxon['name'].replace(' ', '_')}"
+    return f'{taxon["abbrev"]}:{taxon["name"].replace(" ", "_")}'
