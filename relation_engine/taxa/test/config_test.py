@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from pathlib import Path
 from pytest import raises
@@ -121,6 +122,50 @@ def test_maximal_config_success():
         load_timestamp=6,
         release_timestamp=42,
         )
+
+
+def test_config_with_env_var_password_success():
+    pwdold = os.environ.get("ARANGO_PWD")
+    os.environ["ARANGO_PWD"] = "    mypassword    \t  "
+    try:
+        cfgfile = BytesIO("\n".join([
+            "[Inputs]",
+            'input_file = "./bar.txt"',
+            "[Arango]",
+            'url = "http://localhost:12354"',
+            'database = "mydb"',
+            'user = "   foo   "',
+            'password = "      "',
+            'load-registry-collection = "lrc"',
+            'node-collection = "nodes"',
+            'edge-collection = "edges"',
+            "[Versioning]",
+            'load-version = "lver"',
+            "load-timestamp = 12365.0",
+            "release-timestamp = -16000",
+        ]).encode("utf-8"))
+        cfg = DeltaLoaderConfig(cfgfile, ["input_file"])
+
+        _check_config(
+            cfg=cfg,
+            inputs={"input_file": Path("./bar.txt")},
+            url="http://localhost:12354",
+            database="mydb",
+            user="foo",
+            password="mypassword",
+            load_registry_collection="lrc",
+            node_collection="nodes",
+            edge_collection="edges",
+            merge_edge_collection=None,
+            load_version="lver",
+            load_timestamp=12365,
+            release_timestamp=-16000,
+            )
+    finally:
+        if pwdold is None:
+            del os.environ["ARANGO_PWD"]
+        else:
+            os.environ["ARANGO_PWD"] = pwdold
 
 
 def _check_config(
@@ -263,7 +308,8 @@ def test_fail_missing_password():
             'load-version = "ver"',
         ]).encode("utf-8"))
         _fail_config(f, ["input_file"], False, ValueError(
-            "If user is present in the Arango section, password must be present"))
+            "If user is present in the Arango section, password must be present "
+            + "either in the config file or the ARANGO_PWD environment variable"))
 
 
 def test_fail_missing_load_registry_collection():

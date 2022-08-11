@@ -13,7 +13,8 @@ database = "my_database"
 # The username, if any, of a user with credientials enabling database write. Omit to connect with
 # default credentials.
 # username =
-# The password for the user, if any. 
+# The password for the user, if any. If omitted, the ARANGO_PWD environment variable will be
+# checked for the password.
 # password =
 
 # The name of the ArangoDB collection where the load will be registered.
