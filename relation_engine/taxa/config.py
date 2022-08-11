@@ -16,6 +16,7 @@ from pathlib import Path
 # As a result we get slightly less code to maintain and a completely trivial performance boost.
 # And there was much rejoicing.
 
+_SEC_INPUTS = "Inputs"
 _SEC_ARANGO = "Arango"
 _SEC_VERSIONING = "Versioning"
 
@@ -59,7 +60,7 @@ class DeltaLoaderConfig:
             config file data.
         input_keys - a list of keys for entries in the configuration that will
             specify a path to an input file or directory. They are expected to be in the
-            top level of the configuration.
+            "Inputs" section of the configuration.
         require_merge_collection - if true, throw an error is a merge collection is not specified.
         """
         if not config_file:
@@ -69,14 +70,15 @@ class DeltaLoaderConfig:
         config = tomli.load(config_file)
         # I feel like there ought to be a lib to do this kind of stuff... jsonschema doesn't
         # quite do what I want
-        inputs = {}
-        for key in input_keys:
-            if not config.get(key):
-                raise ValueError(f"Missing input key {key}")
-            inputs[key] = Path(config[key].strip())
-        self.inputs = frozendict(inputs)
+        _check_missing_section(config, _SEC_INPUTS)
         _check_missing_section(config, _SEC_ARANGO)
         _check_missing_section(config, _SEC_VERSIONING)
+        inputs = {}
+        for key in input_keys:
+            if not config[_SEC_INPUTS].get(key):
+                raise ValueError(f"Missing input key {key} in section {_SEC_INPUTS}")
+            inputs[key] = Path(config[_SEC_INPUTS][key].strip())
+        self.inputs = frozendict(inputs)
         self.url = _get_string_required(config, _SEC_ARANGO, "url")
         self.database = _get_string_required(config, _SEC_ARANGO, "database")
         self.user = _get_string_optional(config, _SEC_ARANGO, "user")

@@ -1,3 +1,4 @@
+[Inputs]
 # The directory containing the unzipped input NCBI dump taxonomy files.
 input_directory = "./taxa/ncbi/taxdmp_2022-07-01"
 

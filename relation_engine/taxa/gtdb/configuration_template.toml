@@ -1,3 +1,4 @@
+[Inputs]
 # The input GTDB taxonomy file, e.g. bac120_taxonomy_r207.tsv
 input_file = "./bac120_taxonomy_r207.tsv"
 

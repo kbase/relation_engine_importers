@@ -7,6 +7,7 @@ from relation_engine.taxa.config import DeltaLoaderConfig
 from relation_engine.test.testing_helpers import assert_exception_correct
 
 _BASIC_CONFIG = "\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "http://localhost:12354"',
@@ -45,6 +46,7 @@ def test_minimal_config_success():
 def test_minimal_config_whitespace_success():
     # Include optional keys with whitespace entries
     cfgfile = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "http://localhost:12354"',
@@ -81,6 +83,7 @@ def test_minimal_config_whitespace_success():
 
 def test_maximal_config_success():
     cfgfile = BytesIO("\n".join([
+        "[Inputs]",
         '     input_file    =     "    ./bar.txt   "    ',
         'other_file = "/tmp/usera/misc/schoolwork/CBS101a/homework1/tortoises_in_the_nude.mp4"',
         "[Arango]",
@@ -179,16 +182,16 @@ def test_fail_toml_error():
     _fail_config(f, ["inputfile"], False, TOMLDecodeError("Invalid value (at line 1, column 15)"))
 
 
-def test_fail_missing_input_key():
+def test_fail_missing_inputs_section():
     f = BytesIO("\n".join([
         'input_file = "./bar.txt"',
-        'input_file2 = "./foo.txt"',
     ]).encode("utf-8"))
-    _fail_config(f, ["inputfile"], False, ValueError("Missing input key inputfile"))
+    _fail_config(f, ["input_file"], False, ValueError("Missing section Inputs"))
 
 
 def test_fail_missing_arango_section():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
     ]).encode("utf-8"))
     _fail_config(f, ["input_file"], False, ValueError("Missing section Arango"))
@@ -196,6 +199,7 @@ def test_fail_missing_arango_section():
 
 def test_fail_missing_versioning_section():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
@@ -203,9 +207,22 @@ def test_fail_missing_versioning_section():
     _fail_config(f, ["input_file"], False, ValueError("Missing section Versioning"))
 
 
+def test_fail_missing_input_key():
+    f = BytesIO("\n".join([
+        "[Inputs]",
+        'input_file = "./bar.txt"',
+        'input_file2 = "./foo.txt"',
+        "[Arango]",
+        "[Versioning]",
+    ]).encode("utf-8"))
+    _fail_config(f, ["inputfile"], False, ValueError(
+        "Missing input key inputfile in section Inputs"))
+
+
 def test_fail_missing_url():
     for url in ["", 'url = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             url,
@@ -220,6 +237,7 @@ def test_fail_missing_url():
 def test_fail_missing_database():
     for db in ["", 'database = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -234,6 +252,7 @@ def test_fail_missing_database():
 def test_fail_missing_password():
     for p in ["", 'password = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -250,6 +269,7 @@ def test_fail_missing_password():
 def test_fail_missing_load_registry_collection():
     for lrc in ["", 'load-registry-collection = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -265,6 +285,7 @@ def test_fail_missing_load_registry_collection():
 def test_fail_missing_node_collection():
     for n in ["", 'node-collection = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -281,6 +302,7 @@ def test_fail_missing_node_collection():
 def test_fail_missing_edge_collection():
     for e in ["", 'edge-collection = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -298,6 +320,7 @@ def test_fail_missing_edge_collection():
 def test_fail_missing_merge_collection():
     for m in ["", 'merge-edge-collection = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -316,6 +339,7 @@ def test_fail_missing_merge_collection():
 def test_fail_missing_load_version():
     for lv in ["", 'load-version = "    \t  "']:
         f = BytesIO("\n".join([
+            "[Inputs]",
             'input_file = "./bar.txt"',
             "[Arango]",
             'url = "https://foo.com"',
@@ -333,6 +357,7 @@ def test_fail_missing_load_version():
 
 def test_fail_missing_load_timestamp():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
@@ -349,6 +374,7 @@ def test_fail_missing_load_timestamp():
 
 def test_fail_float_load_timestamp():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
@@ -367,6 +393,7 @@ def test_fail_float_load_timestamp():
 
 def test_fail_bad_type_load_timestamp():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
@@ -385,6 +412,7 @@ def test_fail_bad_type_load_timestamp():
 
 def test_fail_missing_release_timestamp():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
@@ -402,6 +430,7 @@ def test_fail_missing_release_timestamp():
 
 def test_fail_float_release_timestamp():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
@@ -421,6 +450,7 @@ def test_fail_float_release_timestamp():
 
 def test_fail_bad_type_release_timestamp():
     f = BytesIO("\n".join([
+        "[Inputs]",
         'input_file = "./bar.txt"',
         "[Arango]",
         'url = "https://foo.com"',
