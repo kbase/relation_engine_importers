@@ -52,7 +52,7 @@ def test_minimal_config_whitespace_success():
         "[Arango]",
         'url = "http://localhost:12354"',
         'database = "mydb"',
-        'user = "    \t    "',
+        'username = "    \t    "',
         'password = "    \t    "',
         'load-registry-collection = "lrc"',
         'node-collection = "nodes"',
@@ -90,7 +90,7 @@ def test_maximal_config_success():
         "[Arango]",
         '    url    =     "     https://hoorayitspirateday.com    "   \t  ',
         '\tdatabase\t = \t"\tmyotherdb\t"\t',
-        '    user    =     "    \t  user1   "   \t  ',
+        '    username    =     "    \t  user1   "   \t  ',
         ' password  =  " pwd1 " ',
         '    \t  load-registry-collection \t   =   \t  "  \t  loading...  \t "  \t',
         '     node-collection    =    "    mynodes   "  ',
@@ -134,7 +134,7 @@ def test_config_with_env_var_password_success():
             "[Arango]",
             'url = "http://localhost:12354"',
             'database = "mydb"',
-            'user = "   foo   "',
+            'username = "   foo   "',
             'password = "      "',
             'load-registry-collection = "lrc"',
             'node-collection = "nodes"',
@@ -302,13 +302,13 @@ def test_fail_missing_password():
             "[Arango]",
             'url = "https://foo.com"',
             'database = "db"',
-            'user = "pwd is required if user is misssing"',
+            'username = "pwd is required if user is misssing"',
             p,
             "[Versioning]",
             'load-version = "ver"',
         ]).encode("utf-8"))
         _fail_config(f, ["input_file"], False, ValueError(
-            "If user is present in the Arango section, password must be present "
+            "If username is present in the Arango section, password must be present "
             + "either in the config file or the ARANGO_PWD environment variable"))
 
 
