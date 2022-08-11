@@ -1,0 +1,43 @@
+[Inputs]
+# The input GTDB taxonomy file, e.g. bac120_taxonomy_r207.tsv
+input_file = "./bac120_taxonomy_r207.tsv"
+
+[Arango]
+    
+# The URL of an arango coordinator
+url = "http://localhost:8529"
+
+# The name of the ArangoDB database that will be updated
+database = "my_database"
+
+# The username, if any, of a user with credientials enabling database write. Omit to connect with
+# default credentials.
+# username =
+# The password for the user, if any. If omitted, the ARANGO_PWD environment variable will be
+# checked for the password.
+# password =
+
+# The name of the ArangoDB collection where the load will be registered.
+# This is typically the same collection for all delta loaded data.
+load-registry-collection = "delta_load_registry"
+
+# The name of the ArangoDB collection into which taxa nodes will be loaded.
+node-collection = "gtdb_taxon"
+
+# The name of the ArangoDB collection into which taxa edges will be loaded.
+edge-collection = "gtdb_child_of_taxon"
+
+[Versioning]
+
+# The version of this load. This version will be added to a field in the nodes and
+# edges and will be used as part of the _key field.
+load-version = "version_1.2.3"
+
+# The timestamp to be applied to the load, in unix epoch milliseconds. Any nodes
+# or edges created in this load will start to exist with this time stamp.
+# NOTE: the user is responsible for ensuring this timestamp is greater than any
+# other timestamps previously used to load data into the DB.
+load-timestamp = 1669570625000
+
+# The timestamp, in unix epoch milliseconds, when the data was released at the source.
+release-timestemp = 1659570625000
