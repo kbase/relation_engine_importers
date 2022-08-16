@@ -33,7 +33,7 @@ class DeltaLoaderConfig:
 
     url: str - the URL of an arango coordinator.
     database: str - the name of the ArangoDB database to update.
-    user: str | None - the username, if any, of the user name to use when connecting to
+    username: str | None - the name, if any, of the user to use when connecting to
          ArangoDB.
     password: str | None - the password for the user. Present IFF the user is present.
     load_registry_collection: str - The name of the ArangoDB collection in which to register
@@ -83,16 +83,16 @@ class DeltaLoaderConfig:
         self.inputs = frozendict(inputs)
         self.url = _get_string_required(config, _SEC_ARANGO, "url")
         self.database = _get_string_required(config, _SEC_ARANGO, "database")
-        self.user = _get_string_optional(config, _SEC_ARANGO, "user")
+        self.username = _get_string_optional(config, _SEC_ARANGO, "username")
         self.password = _get_string_optional(config, _SEC_ARANGO, "password")
-        if self.user and not self.password:
+        if self.username and not self.password:
             p = os.environ.get(_ENV_ARANGO_PASSWORD)
             self.password = p.strip() if p else None
             if not self.password:
                 raise ValueError(
-                    f"If user is present in the {_SEC_ARANGO} section, password must be present "
-                    + f"either in the config file or the {_ENV_ARANGO_PASSWORD} environment "
-                    + "variable")
+                    f"If username is present in the {_SEC_ARANGO} section, password must be "
+                    + f"present either in the config file or the {_ENV_ARANGO_PASSWORD} "
+                    + "environment variable")
         self.load_registry_collection = _get_string_required(
             config, _SEC_ARANGO, "load-registry-collection")
         self.node_collection = _get_string_required(config, _SEC_ARANGO, "node-collection")

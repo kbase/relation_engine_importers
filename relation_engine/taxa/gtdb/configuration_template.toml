@@ -40,4 +40,4 @@ load-version = "version_1.2.3"
 load-timestamp = 1669570625000
 
 # The timestamp, in unix epoch milliseconds, when the data was released at the source.
-release-timestemp = 1659570625000
+release-timestamp = 1659570625000
