@@ -32,7 +32,7 @@ def test_minimal_config_success():
         inputs={"input_file": Path("./bar.txt")},
         url="http://localhost:12354",
         database="mydb",
-        user=None,
+        username=None,
         password=None,
         load_registry_collection="lrc",
         node_collection="nodes",
@@ -70,7 +70,7 @@ def test_minimal_config_whitespace_success():
         inputs={"input_file": Path("./bar.txt")},
         url="http://localhost:12354",
         database="mydb",
-        user=None,
+        username=None,
         password=None,
         load_registry_collection="lrc",
         node_collection="nodes",
@@ -112,7 +112,7 @@ def test_maximal_config_success():
         },
         url="https://hoorayitspirateday.com",
         database="myotherdb",
-        user="user1",
+        username="user1",
         password="pwd1",
         load_registry_collection="loading...",
         node_collection="mynodes",
@@ -151,7 +151,7 @@ def test_config_with_env_var_password_success():
             inputs={"input_file": Path("./bar.txt")},
             url="http://localhost:12354",
             database="mydb",
-            user="foo",
+            username="foo",
             password="mypassword",
             load_registry_collection="lrc",
             node_collection="nodes",
@@ -173,7 +173,7 @@ def _check_config(
         inputs,
         url,
         database,
-        user,
+        username,
         password,
         load_registry_collection,
         node_collection,
@@ -185,7 +185,7 @@ def _check_config(
     assert cfg.inputs == inputs
     assert cfg.url == url
     assert cfg.database == database
-    assert cfg.user == user
+    assert cfg.username == username
     assert cfg.password == password
     assert cfg.load_registry_collection == load_registry_collection
     assert cfg.node_collection == node_collection

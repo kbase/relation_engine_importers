@@ -42,8 +42,8 @@ def main():
     names = rootdir / NAMES_IN_FILE
     merged = rootdir / MERGED_IN_FILE
     client = ArangoClient(hosts=cfg.url)
-    if cfg.user:
-        db = client.db(cfg.database, cfg.user, cfg.password, verify=True)
+    if cfg.username:
+        db = client.db(cfg.database, cfg.username, cfg.password, verify=True)
     else:
         db = client.db(cfg.database, verify=True)
     attdb = ArangoBatchTimeTravellingDB(

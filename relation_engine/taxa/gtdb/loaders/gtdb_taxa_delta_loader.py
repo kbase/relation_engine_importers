@@ -33,8 +33,8 @@ changes between the prior load and the current load, and retaining the prior loa
 def main():
     cfg = get_config()
     client = ArangoClient(hosts=cfg.url)
-    if cfg.user:
-        db = client.db(cfg.database, cfg.user, cfg.password, verify=True)
+    if cfg.username:
+        db = client.db(cfg.database, cfg.username, cfg.password, verify=True)
     else:
         db = client.db(cfg.database, verify=True)
     attdb = ArangoBatchTimeTravellingDB(
