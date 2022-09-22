@@ -11,6 +11,7 @@ from relation_engine.taxa.gtdb.parsers import GTDBNodeProvider
 from relation_engine.taxa.gtdb.parsers import GTDBEdgeProvider
 from relation_engine.batchload.delta_load import load_graph_delta
 from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTravellingDB
+from relation_engine.version import VERSION
 
 _INPUT_FILE = 'input_file'
 _LOAD_NAMESPACE = 'gtdb_taxa'
@@ -25,6 +26,7 @@ changes between the prior load and the current load, and retaining the prior loa
                         help='the path to the loader configuration file. NOTE: the config '
                         + 'file will need to be updated for each consecutive load; it is not '
                         + 'static.')
+    parser.add_argument('--version', action='version', version=VERSION)
     a = parser.parse_args()
     with open(a.config, 'rb') as c:
         return DeltaLoaderConfig(c, [_INPUT_FILE])
