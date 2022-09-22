@@ -2,6 +2,10 @@
 """
 Copied and pasted from other taxa delta loaders
 """
+
+# TODO add version command line option (see ncbi loader)
+# TODO switch from 10+ args to a config file (see ncbi loader)
+
 import argparse
 import getpass
 from arango import ArangoClient

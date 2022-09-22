@@ -12,6 +12,7 @@ from relation_engine.taxa.ncbi.parsers import NCBIEdgeProvider
 from relation_engine.taxa.ncbi.parsers import NCBIMergeProvider
 from relation_engine.batchload.delta_load import load_graph_delta
 from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTravellingDB
+from relation_engine.version import VERSION
 
 _LOAD_NAMESPACE = 'ncbi_taxa'
 _INPUT_DIRECTORY = 'input_directory'
@@ -30,6 +31,7 @@ changes between the prior load and the current load, and retaining the prior loa
                         help='the path to the loader configuration file. NOTE: the config '
                         + 'file will need to be updated for each consecutive load; it is not '
                         + 'static.')
+    parser.add_argument('--version', action='version', version=VERSION)
     a = parser.parse_args()
     with open(a.config, 'rb') as c:
         return DeltaLoaderConfig(c, [_INPUT_DIRECTORY], require_merge_collection=True)

@@ -50,13 +50,6 @@ To stop arangodb:
 arangodb stop
 ```
 
-## Standard loader usage
-
-For loaders in the `src` directory. These loaders may be moved into the `relation_engine`
-directory later.
-
-TODO
-
 ## Time travelling delta loaders
 
 Time travelling code is in the `relation_engine` directory / package.
@@ -193,3 +186,10 @@ one-off scripts there.
   * Currently only handles merge edges where
     * The merged node was present in the prior load and
     * The target node is present in the current load.
+
+## Development
+
+When developing improvements to current loaders or adding new loaders to the repo, increment the
+[semantic version](https://semver.org/) in `relation_engine/version.py`. Currently only the
+GTDB and NCBI taxa loaders have an option to print the version - if changes are made to other
+loaders add the ability to print the version there as well.

@@ -2,6 +2,9 @@
 
 # TODO TEST
 
+# TODO add version command line option (see ncbi loader)
+# TODO switch from 10+ args to a config file (see ncbi loader)
+
 import argparse
 import getpass
 import json
