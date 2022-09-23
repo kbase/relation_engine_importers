@@ -41,35 +41,40 @@ class GTDBNodeProvider:
     iteration.
     """
 
-    def __init__(self, gtdb_taxonomy_file_handle):
+    def __init__(self, gtdb_bacterial_taxonomy_file_handle, gtdb_archaeal_taxonomy_file_handle):
         """
         Create the node provider.
 
-        gtdb_taxonomy_file_handle - an open handle to the GTDB taxonomy file to process.
+        gtdb_bacterial_taxonomy_file_handle - an open handle to the bacterial GTDB taxonomy file
+            to process.
+        gtdb_archaeal_taxonomy_file_handle - an open handle to the archaeal GTDB taxonomy file
+            to process.
         """
-        self._fh = gtdb_taxonomy_file_handle
+        self._bac_fh = gtdb_bacterial_taxonomy_file_handle
+        self._arc_fh = gtdb_archaeal_taxonomy_file_handle
 
     def __iter__(self):
         seen_taxa = set()  # not including leaves
-        for line in self._fh:
-            accession, lineage = line.strip().split("\t")
-            lineage = _get_lineage(lineage)
-            for lin in lineage:
-                l_id = _taxon_to_id(lin)
-                if l_id not in seen_taxa:
-                    yield {
-                        ID: l_id,
-                        RANK: _TAXA_TYPES[lin["abbrev"]],
-                        SCI_NAME: lin["name"],
-                        SPECIES_OR_BELOW: lin["abbrev"] == _ABBRV_SPECIES
-                    }
-                seen_taxa.add(l_id)
-            yield {
-                ID: accession,
-                RANK: "genome",
-                SCI_NAME: lineage[-1]["name"],
-                SPECIES_OR_BELOW: True
-            }
+        for fh in [self._bac_fh, self._arc_fh]:
+            for line in fh:
+                accession, lineage = line.strip().split("\t")
+                lineage = _get_lineage(lineage)
+                for lin in lineage:
+                    l_id = _taxon_to_id(lin)
+                    if l_id not in seen_taxa:
+                        yield {
+                            ID: l_id,
+                            RANK: _TAXA_TYPES[lin["abbrev"]],
+                            SCI_NAME: lin["name"],
+                            SPECIES_OR_BELOW: lin["abbrev"] == _ABBRV_SPECIES
+                        }
+                    seen_taxa.add(l_id)
+                yield {
+                    ID: accession,
+                    RANK: "genome",
+                    SCI_NAME: lineage[-1]["name"],
+                    SPECIES_OR_BELOW: True
+                }
 
 
 class GTDBEdgeProvider:
@@ -78,35 +83,40 @@ class GTDBEdgeProvider:
     iteration.
     """
 
-    def __init__(self, gtdb_taxonomy_file_handle):
+    def __init__(self, gtdb_bacterial_taxonomy_file_handle, gtdb_archaeal_taxonomy_file_handle):
         """
         Create the edge provider.
 
-        gtdb_taxonomy_file_handle - an open handle to the GTDB taxonomy file to process.
+        gtdb_bacterial_taxonomy_file_handle - an open handle to the bacterial GTDB taxonomy file
+            to process.
+        gtdb_archaeal_taxonomy_file_handle - an open handle to the archaeal GTDB taxonomy file
+            to process.
         """
-        self._fh = gtdb_taxonomy_file_handle
+        self._bac_fh = gtdb_bacterial_taxonomy_file_handle
+        self._arc_fh = gtdb_archaeal_taxonomy_file_handle
 
     def __iter__(self):
         seen_taxa = set()  # not including leaves
-        for line in self._fh:
-            accession, lineage = line.strip().split("\t")
-            lineage = _get_lineage(lineage)
-            for i in range(len(lineage) - 1):
-                parent_id = _taxon_to_id(lineage[i])
-                child_id = _taxon_to_id(lineage[i + 1])
-                if child_id not in seen_taxa:
-                    yield {
-                        ID: child_id,  # one edge per child
-                        FROM: child_id,
-                        TO: parent_id
-                    }
-                seen_taxa.add(child_id)
-            parent_id = _taxon_to_id(lineage[-1])
-            yield {
-                ID: accession,  # one edge per child
-                FROM: accession,
-                TO: parent_id
-            }
+        for fh in [self._bac_fh, self._arc_fh]:
+            for line in fh:
+                accession, lineage = line.strip().split("\t")
+                lineage = _get_lineage(lineage)
+                for i in range(len(lineage) - 1):
+                    parent_id = _taxon_to_id(lineage[i])
+                    child_id = _taxon_to_id(lineage[i + 1])
+                    if child_id not in seen_taxa:
+                        yield {
+                            ID: child_id,  # one edge per child
+                            FROM: child_id,
+                            TO: parent_id
+                        }
+                    seen_taxa.add(child_id)
+                parent_id = _taxon_to_id(lineage[-1])
+                yield {
+                    ID: accession,  # one edge per child
+                    FROM: accession,
+                    TO: parent_id
+                }
 
 
 def _get_lineage(linstr):

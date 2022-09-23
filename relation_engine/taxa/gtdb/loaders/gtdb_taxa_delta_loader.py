@@ -13,7 +13,8 @@ from relation_engine.batchload.delta_load import load_graph_delta
 from relation_engine.batchload.time_travelling_database import ArangoBatchTimeTravellingDB
 from relation_engine.version import VERSION
 
-_INPUT_FILE = 'input_file'
+_BAC_INPUT_FILE = 'bac_input_file'
+_AR_INPUT_FILE = 'ar_input_file'
 _LOAD_NAMESPACE = 'gtdb_taxa'
 
 
@@ -29,7 +30,7 @@ changes between the prior load and the current load, and retaining the prior loa
     parser.add_argument('--version', action='version', version=VERSION)
     a = parser.parse_args()
     with open(a.config, 'rb') as c:
-        return DeltaLoaderConfig(c, [_INPUT_FILE])
+        return DeltaLoaderConfig(c, [_BAC_INPUT_FILE, _AR_INPUT_FILE])
 
 
 def main():
@@ -45,10 +46,11 @@ def main():
         cfg.node_collection,
         default_edge_collection=cfg.edge_collection)
 
-    input_file = cfg.inputs[_INPUT_FILE]
-    with open(input_file) as in1, open(input_file) as in2:
-        nodeprov = GTDBNodeProvider(in1)
-        edgeprov = GTDBEdgeProvider(in2)
+    bif = cfg.inputs[_BAC_INPUT_FILE]
+    aif = cfg.inputs[_AR_INPUT_FILE]
+    with open(bif) as bin1, open(bif) as bin2, open(aif) as ain1, open(aif) as ain2:
+        nodeprov = GTDBNodeProvider(bin1, ain1)
+        edgeprov = GTDBEdgeProvider(bin2, ain2)
 
         load_graph_delta(_LOAD_NAMESPACE, nodeprov, edgeprov, attdb,
                          cfg.load_timestamp, cfg.release_timestamp, cfg.load_version)

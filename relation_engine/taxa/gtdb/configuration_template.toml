@@ -1,6 +1,7 @@
 [Inputs]
-# The input GTDB taxonomy file, e.g. bac120_taxonomy_r207.tsv
-input_file = "./bac120_taxonomy_r207.tsv"
+# The input GTDB bacterial and archaeal taxonomy files
+bac_input_file = "./bac120_taxonomy_r207.tsv"
+ar_input_file = "./ar53_taxonomy_r207.tsv"
 
 [Arango]
     
