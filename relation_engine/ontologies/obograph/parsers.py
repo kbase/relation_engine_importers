@@ -85,6 +85,7 @@ class OBOGraphLoader:
             raise ValueError(f'Found unprocessable node types {unknown_types}')
         self._ont_prefix = ontology_id_prefix
         self._property_map = self._get_property_map(obo)
+        self._deprecated_nodes = {}
 
     def _get_property_map(self, obo):
         ret = {}
@@ -196,6 +197,7 @@ class OBOGraphLoader:
         if not deprecated_ok and meta.get(_OBO_DEPRECATED):
             # may want some sort of special loader for loading pre-expired deprecated nodes
             # needs more thought
+            self._deprecated_nodes[id_] = True
             return False
         return True
 
@@ -268,6 +270,8 @@ class OBOGraphLoader:
             from_ = self._clean_obo_id(sub)
             to = self._clean_obo_id(obj)
             if not from_.startswith(self._ont_prefix) or not to.startswith(self._ont_prefix):
+                continue
+            if from_ in self._deprecated_nodes or to in self._deprecated_nodes:
                 continue
             pred = e[_OBO_PREDICATE]
             if pred in self._property_map:
