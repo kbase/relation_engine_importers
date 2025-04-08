@@ -3,16 +3,17 @@ name: Run tests
 on:
   pull_request:
     types:
-    - opened
-    - reopened
-    - synchronize
-    - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
   push:
     # run workflow when merging to main or develop
     branches:
       - main
       - master
       - develop
+  workflow_dispatch:
 
 jobs:
 
