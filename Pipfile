@@ -17,7 +17,7 @@ parsec = "==3.13"
 networkx = "==2.8.4"
 python-arango = "==7.4.1"
 tomli = "==2.0.1"
-frozendict = "==2.3.4"
+frozendict = "==2.4.7"
 
 [requires]
 python_version = "3.10"
